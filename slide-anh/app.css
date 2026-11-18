@@ -1,5 +1,6 @@
 * { box-sizing: border-box; margin: 0; }
-html, body { height: 100%; background: #000; overflow: hidden; }
+html, body { height: 100%; background: #000; overflow: hidden; overscroll-behavior: none; }
+body { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 body {
   display: grid; place-items: center;
   font-family: "Cormorant Garamond", "Times New Roman", serif;
@@ -14,14 +15,14 @@ img { display: block; }
 .stage {
   --ar: 1.5;
   position: relative;
-  width: min(100vw, calc(100vh * var(--ar)));
-  height: min(100vh, calc(100vw / var(--ar)));
+  width: min(100vw, calc(100dvh * var(--ar)));
+  height: min(100dvh, calc(100vw / var(--ar)));
   background: #000;
   overflow: hidden;
   container: stage / size;
   isolation: isolate;
 }
-.stage.auto { width: 100vw; height: 100vh; }
+.stage.auto { width: 100vw; height: 100dvh; }
 body.panel-open .stage { outline: 1px dashed rgba(255, 255, 255, .28); }
 .layer, .layer > .style { position: absolute; inset: 0; overflow: hidden; }
 
@@ -175,3 +176,57 @@ body.board-open { cursor: auto !important; }
 .bar .home { padding: 8px 12px; border-radius: 9px; text-decoration: none; color: inherit;
   border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .06); }
 .bar .home:hover { background: rgba(255, 255, 255, .15); }
+
+/* ---------- Điện thoại và màn hẹp ---------- */
+.sm { display: none; }
+@media (max-width: 900px) {
+  .bar {
+    left: 8px; right: 8px; top: auto; bottom: calc(8px + env(safe-area-inset-bottom)); translate: none; max-width: none;
+    display: grid; grid-template-columns: auto repeat(4, 1fr); gap: 6px; padding: 8px; white-space: normal;
+  }
+  body.idle .bar { translate: 0 20px; }
+  .bar .sep { display: none; }
+  .lg { display: none; }
+  .sm { display: inline; }
+  .bar button, .bar .home { min-height: 44px; padding: 6px 4px; font-size: 13px; text-align: center; line-height: 1.25; }
+  .bar .home { display: grid; place-items: center; min-width: 44px; font-size: 18px; }
+  .bar button i { display: block; margin: 0; font-size: 16px; opacity: .8; }
+  .bar button b { display: block; margin: 0; font-size: 11px; }
+  /* hàng dưới: ◀ tên mẫu ▶ · nhạc · toàn màn hình */
+  .bar [data-act=prev] { grid-column: 1; grid-row: 2; }
+  .bar .now { grid-column: 2; grid-row: 2; min-width: 0; align-self: center; font-size: 13px; line-height: 1.2; }
+  .bar [data-act=next] { grid-column: 3; grid-row: 2; }
+  .bar #barPlay { grid-column: 4; grid-row: 2; }
+  .bar [data-act=fs] { grid-column: 5; grid-row: 2; }
+  .toast { bottom: calc(132px + env(safe-area-inset-bottom)); white-space: normal; width: max-content; max-width: calc(100vw - 32px); text-align: center; border-radius: 16px; }
+
+  .board { place-items: stretch; background: #14161f; }
+  .sheet { width: 100vw; height: 100dvh; border: 0; border-radius: 0; }
+  .sheet header { padding: 8px 8px calc(8px); gap: 6px; padding-top: calc(8px + env(safe-area-inset-top)); }
+  .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; gap: 4px; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tabs button { font-size: 14px; padding: 10px 6px; white-space: nowrap; flex: 1; text-align: center; }
+  .board .done { font-size: 14px; padding: 10px 14px; flex: none; }
+  .sheet section { padding: 12px 12px calc(20px + env(safe-area-inset-bottom)); gap: 12px; }
+  .opts { gap: 8px; }
+  .opt { min-width: 0; padding: 10px 12px; }
+  .opts > .opt, .opts > .opt.grow { flex: 1 1 100%; }
+  .board button { min-height: 42px; }
+  .seg button, .row button { flex: 1 1 auto; text-align: center; }
+  .cards { grid-template-columns: 1fr; gap: 8px; }
+  .card-s { padding: 10px 12px; }
+  .thumbs { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 6px; }
+  .sheet input[type=text] { font-size: 16px; }              /* dưới 16px thì iPhone tự phóng to khi gõ */
+  .sheet input[type=range] { height: 32px; }
+  .player .big { flex: 1 1 100%; }
+  .player .vol { width: 100%; margin-left: 0; }
+  .tr { gap: 10px; padding: 10px; }
+  .tr .nm { white-space: normal; }
+  .tr button { min-width: 44px; }
+  .tip { font-size: 12.5px; }
+}
+@media (max-width: 420px) {
+  .bar { grid-template-columns: auto repeat(4, 1fr); }
+  .bar button { font-size: 12px; }
+  .bar #barPlay { font-size: 11.5px; }
+}

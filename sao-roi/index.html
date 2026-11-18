@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
 <meta name="robots" content="noindex, nofollow">
 <title>Minh Hoàng &amp; Kim Ngân</title>
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -46,14 +47,14 @@
   .stage {
     --ar: 1.5;
     position: relative;
-    width: min(100vw, calc(100vh * var(--ar)));
-    height: min(100vh, calc(100vw / var(--ar)));
+    width: min(100vw, calc(100dvh * var(--ar)));
+    height: min(100dvh, calc(100vw / var(--ar)));
     background: #000;
     overflow: hidden;
     container: stage / size;
     isolation: isolate;
   }
-  .stage.auto { width: 100vw; height: 100vh; }
+  .stage.auto { width: 100vw; height: 100dvh; }
   body.panel-open .stage { outline: 1px dashed rgba(255, 255, 255, .28); }
 
   .halo {
@@ -177,7 +178,7 @@
   }
   .panel {
     position: fixed; right: 18px; bottom: 72px; z-index: 21;
-    width: min(360px, calc(100vw - 36px)); max-height: calc(100vh - 100px); overflow: auto;
+    width: min(360px, calc(100vw - 36px)); max-height: calc(100dvh - 100px); overflow: auto;
     padding: 18px; border-radius: 16px;
     background: rgba(16, 18, 28, .88); backdrop-filter: blur(18px);
     border: 1px solid rgba(255, 255, 255, .14);
@@ -202,6 +203,16 @@
   .row { display: flex; flex-wrap: wrap; gap: 6px; }
   .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .keys { font-size: 12px; color: #9aa0bf; line-height: 2; }
+  @media (max-width: 700px) {
+    html, body { overscroll-behavior: none; }
+    .gear { width: 50px; height: 50px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); }
+    .hint { font-size: 12px; white-space: nowrap; bottom: calc(18px + env(safe-area-inset-bottom)); left: calc(50% - 30px); }
+    .panel { left: 8px; right: 8px; width: auto; bottom: calc(72px + env(safe-area-inset-bottom)); max-height: calc(100dvh - 90px); padding: 14px; }
+    .panel input[type=text] { font-size: 16px; padding: 9px 10px; }
+    .panel input[type=range] { height: 30px; }
+    .seg button, .row button { min-height: 42px; flex: 1 1 auto; }
+    .keys { display: none; }
+  }
 </style>
 </head>
 <body>

@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
 <meta name="robots" content="noindex, nofollow">
 <title>Ảnh cưới Minh Hoàng &amp; Kim Ngân</title>
 <link rel="stylesheet" href="fonts/fonts.css">
@@ -19,17 +20,17 @@
 <!-- Thanh công cụ: hiện khi rê chuột, tự ẩn khi trình chiếu -->
 <nav class="bar" id="bar">
   <a class="home" href="../" title="Về trang chọn">⌂</a>
-  <button data-act="tab:styles"><i>▦</i> Mẫu trình chiếu</button>
-  <button data-act="tab:photos"><i>▣</i> Chọn ảnh <b id="barPhotos"></b></button>
-  <button data-act="tab:music"><i>♪</i> Nhạc nền <b id="barMusic"></b></button>
-  <button data-act="tab:screen"><i>◱</i> Màn hình &amp; chữ</button>
+  <button data-act="tab:styles"><i>▦</i><span class="lg">Mẫu trình chiếu</span><span class="sm">Mẫu</span></button>
+  <button data-act="tab:photos"><i>▣</i><span class="lg">Chọn ảnh</span><span class="sm">Ảnh</span> <b id="barPhotos"></b></button>
+  <button data-act="tab:music"><i>♪</i><span class="lg">Nhạc nền</span><span class="sm">Nhạc</span> <b id="barMusic"></b></button>
+  <button data-act="tab:screen"><i>◱</i><span class="lg">Màn hình &amp; chữ</span><span class="sm">Màn hình</span></button>
   <span class="sep"></span>
   <button data-act="prev" title="Mẫu trước (←)">◀</button>
   <span class="now" id="barStyle"></span>
   <button data-act="next" title="Mẫu sau (→)">▶</button>
   <span class="sep"></span>
   <button data-act="mtoggle" id="barPlay" title="Bật / tắt nhạc (M)">♪ Bật nhạc</button>
-  <button data-act="fs" class="hot" title="Toàn màn hình (F)">⛶ Toàn màn hình</button>
+  <button data-act="fs" class="hot" title="Toàn màn hình (F)">⛶ <span class="lg">Toàn màn hình</span><span class="sm">Toàn màn</span></button>
 </nav>
 <div class="toast" id="toast"></div>
 
@@ -38,10 +39,10 @@
   <div class="sheet">
     <header>
       <div class="tabs" id="tabs">
-        <button data-tab="styles">Mẫu trình chiếu</button>
-        <button data-tab="photos">Chọn ảnh</button>
-        <button data-tab="music">Nhạc nền</button>
-        <button data-tab="screen">Màn hình &amp; chữ</button>
+        <button data-tab="styles"><span class="lg">Mẫu trình chiếu</span><span class="sm">Mẫu</span></button>
+        <button data-tab="photos"><span class="lg">Chọn ảnh</span><span class="sm">Ảnh</span></button>
+        <button data-tab="music"><span class="lg">Nhạc nền</span><span class="sm">Nhạc</span></button>
+        <button data-tab="screen"><span class="lg">Màn hình &amp; chữ</span><span class="sm">Màn hình</span></button>
       </div>
       <button class="done" data-act="close">Xong ✓</button>
     </header>
@@ -101,7 +102,7 @@
       </div>
       <div class="nowplay" id="nowPlay"></div>
       <div class="tracks" id="trackList"></div>
-      <p class="tip">Bài có dấu tick sẽ được phát, hết danh sách thì lặp lại. Thêm nhạc: bỏ file (mp3, m4a, wav…) vào thư mục <code>music</code>, chạy <code>python prep.py</code> rồi tải lại trang (hoặc đẩy lên GitHub).</p>
+      <p class="tip">Bài có dấu tick sẽ được phát, hết danh sách thì lặp lại. Mỗi lần mở hoặc tải lại trang, thứ tự các bài được trộn ngẫu nhiên. Thêm nhạc: bỏ file (mp3, m4a, wav…) vào thư mục <code>music</code>, chạy <code>python prep.py</code> rồi tải lại trang (hoặc đẩy lên GitHub).</p>
     </section>
 
     <section data-pane="screen">

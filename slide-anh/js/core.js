@@ -71,6 +71,8 @@ window.SL = (() => {
     return img;
   }
   function load(p, size = 'l') {
+    // màn nhỏ (điện thoại): bản 900 px là đủ nét, tải nhanh và đỡ tốn dữ liệu
+    if (size === 'l' && Math.max(stage.clientWidth, stage.clientHeight) * Math.min(devicePixelRatio || 1, 2) <= 1100) size = 's';
     return new Promise(res => {
       const img = new Image();
       img.decoding = 'async'; img.draggable = false;

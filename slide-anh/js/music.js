@@ -6,15 +6,16 @@
   const audio = new Audio();
   audio.preload = 'auto';
   const state = () => (cfg.mstate && typeof cfg.mstate === 'object') ? cfg.mstate : (cfg.mstate = {});
-  let tracks = (window.MUSIC || []).map((f, i) => ({
+  // Mỗi lần mở hoặc tải lại trang, thứ tự bài được trộn ngẫu nhiên; chỉ nhớ bài nào đang được tick
+  let tracks = SL.shuffle((window.MUSIC || []).map(f => ({
     id: f, name: f.replace(/\.[^.]+$/, ''), url: 'music/' + encodeURIComponent(f),
-    on: state()[f]?.on ?? true, pos: state()[f]?.pos ?? 1000 + i,
-  })).sort((a, b) => a.pos - b.pos);
+    on: state()[f]?.on ?? true,
+  })));
   let cur = null, wanted = false, blocked = false, fadeT = 0;
 
   function persist() {
     cfg.mstate = {};
-    tracks.forEach((t, i) => { t.pos = i; cfg.mstate[t.id] = { on: t.on, pos: i }; });
+    tracks.forEach(t => { cfg.mstate[t.id] = { on: t.on }; });
     SL.save();
   }
 
@@ -142,8 +143,6 @@
         b.onclick = e => { e.preventDefault(); fn(); };
       };
       btn(t === cur && playing ? '⏸ Dừng' : '▶ Nghe', 'Phát bài này', () => (t === cur && playing) ? pause() : (t.on = true, persist(), play(t)));
-      btn('↑', 'Đưa lên trước', () => { if (i) { [tracks[i - 1], tracks[i]] = [tracks[i], tracks[i - 1]]; persist(); render(); } });
-      btn('↓', 'Đưa xuống sau', () => { if (i < tracks.length - 1) { [tracks[i + 1], tracks[i]] = [tracks[i], tracks[i + 1]]; persist(); render(); } });
     });
   }
 
