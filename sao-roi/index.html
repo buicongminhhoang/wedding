@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Minh Hoàng &amp; Kim Ngân</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+  :root {
+    --ink: #d9dffb;
+    --hi: #ffffff;
+    --soft: 214, 222, 255;
+    --glow-a: rgba(196, 208, 255, .55);
+    --glow-b: rgba(110, 130, 255, .30);
+    --halo: 84, 100, 190;
+    --bold: .008em;
+  }
+  :root[data-theme="gold"] {
+    --ink: #f4e3bd;
+    --soft: 250, 232, 196;
+    --glow-a: rgba(255, 226, 170, .55);
+    --glow-b: rgba(226, 160, 70, .30);
+    --halo: 170, 120, 50;
+  }
+  :root[data-theme="rose"] {
+    --ink: #fbdfe4;
+    --soft: 255, 226, 232;
+    --glow-a: rgba(255, 205, 216, .55);
+    --glow-b: rgba(230, 110, 150, .28);
+    --halo: 170, 80, 110;
+  }
+
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  body {
+    display: grid; place-items: center;
+    font-family: "Cormorant Garamond", "Times New Roman", serif;
+    color: rgb(var(--soft));
+    -webkit-font-smoothing: antialiased;
+    user-select: none;
+  }
+  body.idle { cursor: none; }
+
+  /* ---------- Khung trình chiếu ---------- */
+  .stage {
+    --ar: 1.5;
+    position: relative;
+    width: min(100vw, calc(100vh * var(--ar)));
+    height: min(100vh, calc(100vw / var(--ar)));
+    background: #000;
+    overflow: hidden;
+    container: stage / size;
+    isolation: isolate;
+  }
+  .stage.auto { width: 100vw; height: 100vh; }
+  body.panel-open .stage { outline: 1px dashed rgba(255, 255, 255, .28); }
+
+  .halo {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse 46% 34% at 50% 50%, rgba(var(--halo), .20), transparent 72%),
+      radial-gradient(ellipse 70% 16% at 50% 88%, rgba(var(--halo), .10), transparent 75%);
+    animation: breathe 11s ease-in-out infinite alternate;
+  }
+  @keyframes breathe { from { opacity: .55; } to { opacity: 1; } }
+
+  #sky { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; display: block; }
+
+  /* ---------- Chữ ---------- */
+  .card {
+    --u: min(10.5cqw, 15.5cqh);
+    position: absolute; inset: 0; z-index: 2;
+    display: grid; place-content: center; justify-items: center;
+    text-align: center;
+    font-size: var(--u);
+    pointer-events: none;
+  }
+  @container stage (aspect-ratio < 1) {
+    .card { --u: min(19cqw, 12.5cqh); }
+  }
+  .card > * {
+    --glow: drop-shadow(0 0 .5em rgba(0, 0, 0, .95));
+    white-space: nowrap;
+    opacity: 0;
+    filter: var(--glow);
+  }
+  .card.play > * {
+    animation: rise 2.4s cubic-bezier(.16, .7, .2, 1) var(--d, 0s) forwards;
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(.28em) scale(.965); filter: blur(.14em) var(--glow); }
+    to   { opacity: 1; transform: none; filter: blur(0) var(--glow); }
+  }
+
+  .label {
+    --d: .3s;
+    display: flex; align-items: center; gap: 1.6em;
+    font-size: .2em; font-weight: 500;
+    letter-spacing: .52em; text-indent: .52em; text-transform: uppercase;
+    margin-bottom: 1.1em;
+  }
+  .label i {
+    width: 5.5em; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(var(--soft), .8));
+  }
+  .label i:last-child { transform: scaleX(-1); }
+
+  .name {
+    --glow: drop-shadow(0 0 .07em var(--glow-a)) drop-shadow(0 0 .32em var(--glow-b));
+    font-family: "Pinyon Script", "Great Vibes", cursive;
+    font-size: 1em; font-weight: 400; line-height: 1.22;
+    padding: 0 .3em;
+    color: transparent;
+    -webkit-text-stroke: var(--bold) var(--ink);
+    background: linear-gradient(105deg, var(--ink) 0 42%, var(--hi) 50%, var(--ink) 58% 100%) 100% 0 / 300% 100%;
+    -webkit-background-clip: text; background-clip: text;
+  }
+  .n1 { --d: .9s; }
+  .n2 { --d: 2.1s; }
+  .card.play .name {
+    animation:
+      rise 2.8s cubic-bezier(.16, .7, .2, 1) var(--d) forwards,
+      sheen 10s ease-in-out calc(var(--d) + 3s) infinite;
+  }
+  @keyframes sheen {
+    0% { background-position: 100% 0; }
+    32%, 100% { background-position: 0 0; }
+  }
+
+  .amp {
+    --d: 1.6s;
+    font-size: .4em; font-style: italic; line-height: 1;
+    margin: -.05em 0 .05em;
+    color: rgba(var(--soft), .82);
+  }
+  .date {
+    --d: 3.2s;
+    font-size: .23em; font-weight: 500;
+    letter-spacing: .42em; text-indent: .42em;
+    margin-top: 1.5em;
+  }
+  .tag {
+    --d: 3.8s;
+    font-size: .2em; font-style: italic;
+    letter-spacing: .04em;
+    margin-top: 1.1em;
+    color: rgba(var(--soft), .78);
+  }
+  .card.still > * { opacity: 1 !important; animation: none !important; }
+  .card [data-empty] { display: none; }
+
+  /* ---------- Bảng điều khiển ---------- */
+  .gear, .panel, .hint {
+    font: 500 14px/1.4 system-ui, "Segoe UI", sans-serif;
+    color: #e8eaf6; user-select: none;
+  }
+  .gear {
+    position: fixed; right: 18px; bottom: 18px; z-index: 20;
+    width: 42px; height: 42px; border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, .18);
+    background: rgba(20, 22, 34, .7); backdrop-filter: blur(10px);
+    color: #fff; font-size: 19px; cursor: pointer;
+    transition: opacity .4s;
+  }
+  body.idle .gear { opacity: 0; pointer-events: none; }
+  .hint {
+    position: fixed; left: 50%; bottom: 22px; z-index: 20; translate: -50% 0;
+    padding: 8px 16px; border-radius: 999px;
+    background: rgba(20, 22, 34, .72); border: 1px solid rgba(255, 255, 255, .14);
+    transition: opacity 1s; pointer-events: none;
+  }
+  .hint.off { opacity: 0; }
+  .hint kbd, .panel kbd {
+    font: inherit; padding: 1px 7px; border-radius: 5px;
+    background: rgba(255, 255, 255, .13);
+  }
+  .panel {
+    position: fixed; right: 18px; bottom: 72px; z-index: 21;
+    width: min(360px, calc(100vw - 36px)); max-height: calc(100vh - 100px); overflow: auto;
+    padding: 18px; border-radius: 16px;
+    background: rgba(16, 18, 28, .88); backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, .14);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .6);
+    display: none; gap: 14px;
+  }
+  body.panel-open .panel { display: grid; }
+  .panel h2 { font-size: 15px; font-weight: 600; }
+  .panel label { display: grid; gap: 5px; font-size: 12px; color: #a9aecb; }
+  .panel input[type=text] {
+    font: inherit; font-size: 14px; color: #fff; padding: 7px 10px; border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .06);
+    user-select: text;
+  }
+  .panel input[type=range] { width: 100%; accent-color: #b9c4ff; }
+  .seg { display: flex; flex-wrap: wrap; gap: 6px; }
+  .seg button, .row button {
+    font: inherit; color: #dfe3fa; padding: 6px 11px; border-radius: 8px; cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .05);
+  }
+  .seg button[aria-pressed=true] { background: #dfe4ff; color: #0b0d18; border-color: transparent; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .keys { font-size: 12px; color: #9aa0bf; line-height: 2; }
+</style>
+</head>
+<body>
+
+<main class="stage" id="stage">
+  <div class="halo"></div>
+  <canvas id="sky"></canvas>
+  <section class="card play" id="card">
+    <p class="label"><i></i><span data-t="label"></span><i></i></p>
+    <h1 class="name n1" data-t="n1"></h1>
+    <p class="amp">&amp;</p>
+    <h1 class="name n2" data-t="n2"></h1>
+    <p class="date" data-t="date"></p>
+    <p class="tag" data-t="tag"></p>
+  </section>
+</main>
+
+<button class="gear" id="gear" title="Cài đặt (H)">⚙</button>
+<div class="hint" id="hint"><kbd>H</kbd> cài đặt &nbsp;·&nbsp; <kbd>F</kbd> toàn màn hình</div>
+
+<aside class="panel" id="panel">
+  <h2>Cài đặt màn sao rơi</h2>
+  <label>Tỉ lệ màn hình
+    <div class="seg" data-seg="ratio">
+      <button data-v="auto">Vừa màn hình</button>
+      <button data-v="3:2">3:2 (3×2 m)</button>
+      <button data-v="2:3">2:3 (2×3 m)</button>
+      <button data-v="4:3">4:3</button>
+      <button data-v="16:9">16:9</button>
+      <button data-v="3:4">3:4</button>
+    </div>
+  </label>
+  <label>Tông màu
+    <div class="seg" data-seg="theme">
+      <button data-v="silver">Bạc ánh sao</button>
+      <button data-v="gold">Vàng champagne</button>
+      <button data-v="rose">Hồng phấn</button>
+    </div>
+  </label>
+  <div class="two">
+    <label>Tên thứ nhất <input type="text" data-k="n1"></label>
+    <label>Tên thứ hai <input type="text" data-k="n2"></label>
+  </div>
+  <label>Dòng tiêu đề <input type="text" data-k="label"></label>
+  <div class="two">
+    <label>Ngày <input type="text" data-k="date"></label>
+    <label>Lời nhắn <input type="text" data-k="tag"></label>
+  </div>
+  <div class="two">
+    <label>Mật độ sao <input type="range" data-k="density" min="0.3" max="2" step="0.05"></label>
+    <label>Tốc độ <input type="range" data-k="speed" min="0.3" max="2.5" step="0.05"></label>
+    <label>Cỡ hạt sao <input type="range" data-k="size" min="0.6" max="3" step="0.05"></label>
+    <label>Độ đậm nét chữ <input type="range" data-k="bold" min="0" max="3" step="0.1"></label>
+  </div>
+  <div class="row">
+    <button data-act="fs">Toàn màn hình</button>
+    <button data-act="replay">Phát lại mở đầu</button>
+    <button data-act="reset">Đặt lại</button>
+    <button data-act="home">⌂ Về trang chọn</button>
+  </div>
+  <div class="keys">
+    <kbd>F</kbd> toàn màn hình · <kbd>H</kbd> ẩn/hiện bảng · <kbd>R</kbd> phát lại<br>
+    <kbd>0</kbd> vừa màn · <kbd>1</kbd> 3:2 · <kbd>2</kbd> 2:3 · <kbd>3</kbd> 4:3 · <kbd>4</kbd> 16:9
+  </div>
+</aside>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ================= Cấu hình ================= */
+  const DEFAULTS = {
+    ratio: 'auto', theme: 'silver',
+    n1: 'Minh Hoàng', n2: 'Kim Ngân',
+    label: 'Lễ Thành Hôn', date: '29 . 11 . 2026',
+    tag: 'Cùng nhau đi hết một đời.',
+    density: 1, speed: 1, size: 1, bold: 1,
+  };
+  const RATIOS = { 'auto': 0, '3:2': 3 / 2, '2:3': 2 / 3, '4:3': 4 / 3, '3:4': 3 / 4, '16:9': 16 / 9 };
+  const THEMES = {
+    silver: ['255,255,255', '206,216,255', '168,188,255'],
+    gold:   ['255,255,255', '255,236,200', '246,212,150'],
+    rose:   ['255,255,255', '255,222,228', '244,184,200'],
+  };
+  const KEY = 'sao-roi-v1';
+  // Tham số URL (ưu tiên cao nhất): ?ratio=3x2&ten1=...&ten2=...&ngay=...&loi=...&tieude=...&mau=gold
+  const URLMAP = { ratio: 'ratio', ten1: 'n1', ten2: 'n2', ngay: 'date', loi: 'tag', tieude: 'label',
+                   mau: 'theme', matdo: 'density', tocdo: 'speed', co: 'size', dam: 'bold' };
+
+  const cfg = { ...DEFAULTS };
+  try { Object.assign(cfg, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {}
+  for (const [p, v] of new URLSearchParams(location.search)) {
+    const k = URLMAP[p]; if (!k) continue;
+    cfg[k] = typeof DEFAULTS[k] === 'number' ? (parseFloat(v) || DEFAULTS[k]) : v;
+  }
+  cfg.ratio = String(cfg.ratio).replace(/[x×]/i, ':');
+  if (!(cfg.ratio in RATIOS)) cfg.ratio = 'auto';
+  if (!(cfg.theme in THEMES)) cfg.theme = 'silver';
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} };
+
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const stage = $('#stage'), card = $('#card'), panel = $('#panel');
+
+  /* ================= Bầu trời sao (Canvas 2D) ================= */
+  const cv = $('#sky');
+  const ctx = cv.getContext('2d');
+  const TAU = Math.PI * 2;
+  const rnd = (a = 1, b) => b === undefined ? Math.random() * a : a + Math.random() * (b - a);
+  const gauss = () => {
+    let u = 0, v = 0;
+    while (!u) u = Math.random();
+    while (!v) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(TAU * v);
+  };
+
+  let W = 0, H = 0, unit = 1;                 // kích thước canvas (px thật)
+  let ring = { cx: 0, cy: 0, rx: 0, ry: 0 };  // vành sao quanh tên
+  let quality = 1;                            // tự giảm nếu máy yếu
+  let dots = [], streak, glint;               // sprite
+
+  function makeSprites() {
+    const tints = THEMES[cfg.theme];
+    dots = tints.map(c => {
+      const s = document.createElement('canvas'); s.width = s.height = 64;
+      const g = s.getContext('2d');
+      const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gr.addColorStop(0, `rgba(${c},1)`);
+      gr.addColorStop(.22, `rgba(${c},.85)`);
+      gr.addColorStop(.5, `rgba(${c},.16)`);
+      gr.addColorStop(1, `rgba(${c},0)`);
+      g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+      return s;
+    });
+
+    // Vệt sao rơi: sáng ở đầu dưới, tan dần lên trên
+    streak = document.createElement('canvas'); streak.width = 16; streak.height = 256;
+    let g = streak.getContext('2d');
+    let gr = g.createLinearGradient(0, 0, 0, 256);
+    gr.addColorStop(0, `rgba(${tints[1]},0)`);
+    gr.addColorStop(.55, `rgba(${tints[1]},.22)`);
+    gr.addColorStop(1, `rgba(${tints[0]},1)`);
+    g.fillStyle = gr; g.fillRect(0, 0, 16, 256);
+    g.globalCompositeOperation = 'destination-in';
+    gr = g.createLinearGradient(0, 0, 16, 0);
+    gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(.5, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 16, 256);
+
+    // Tia lấp lánh bốn cánh
+    glint = document.createElement('canvas'); glint.width = glint.height = 128;
+    g = glint.getContext('2d'); g.translate(64, 64);
+    for (const [sx, sy] of [[1, .045], [.045, 1], [.16, .16]]) {
+      g.save(); g.scale(sx, sy);
+      gr = g.createRadialGradient(0, 0, 0, 0, 0, 64);
+      gr.addColorStop(0, `rgba(${tints[0]},1)`);
+      gr.addColorStop(.4, `rgba(${tints[1]},.5)`);
+      gr.addColorStop(1, `rgba(${tints[1]},0)`);
+      g.fillStyle = gr; g.beginPath(); g.arc(0, 0, 64, 0, TAU); g.fill();
+      g.restore();
+    }
+  }
+
+  /* ----- Các lớp hạt ----- */
+  let ringStars = [], fieldStars = [], fallers = [], glitter = [], bokeh = [], meteors = [], sparks = [];
+  let nextMeteor = 2.5;
+
+  function seed() {
+    const d = cfg.density;
+    // 1. Vành sao: dải bụi sao xoay chậm quanh tên (nghiêng theo phối cảnh)
+    ringStars = Array.from({ length: Math.round(5600 * d) }, () => {
+      const wide = Math.random() < .32;
+      const g = gauss();
+      const r = 1 + (g > 0 ? g * (wide ? .30 : .10) : g * (wide ? .12 : .06));
+      return {
+        a: rnd(TAU), r, h: gauss() * (wide ? .03 : .014),
+        w: (TAU / 300) * rnd(.75, 1.25) / Math.pow(Math.max(r, .6), 1.5),
+        s: 1 + Math.pow(Math.random(), 2.6) * 2.2,
+        al: rnd(.45, 1), ph: rnd(TAU), tw: rnd(.5, 2.4),
+        flare: Math.random() < .05, tint: (Math.random() * 3) | 0,
+      };
+    }).sort((p, q) => p.tint - q.tint);
+
+    // 2. Nền sao thưa, nhấp nháy tại chỗ
+    fieldStars = Array.from({ length: Math.round(650 * d) }, () => ({
+      x: Math.random(), y: Math.random(),
+      s: .6 + Math.pow(Math.random(), 4) * 1.6,
+      al: rnd(.15, .7), ph: rnd(TAU), tw: rnd(.3, 1.8), tint: (Math.random() * 3) | 0,
+    })).sort((p, q) => p.tint - q.tint);
+
+    // 3. Sao rơi thẳng, có vệt sáng
+    fallers = Array.from({ length: Math.round(80 * d) }, () => newFaller(true));
+
+    // 4. Bụi kim tuyến rơi chậm, đung đưa
+    glitter = Array.from({ length: Math.round(150 * d) }, () => ({
+      x: Math.random(), y: Math.random(), v: rnd(.008, .035),
+      sw: rnd(.004, .016), sf: rnd(.2, .7), ph: rnd(TAU), tw: rnd(1, 3.5),
+      s: rnd(1, 2.4), al: rnd(.35, .95), tint: (Math.random() * 3) | 0,
+    }));
+
+    // 5. Đốm sáng mờ tiền cảnh
+    bokeh = Array.from({ length: 9 }, () => ({
+      x: Math.random(), y: Math.random(), v: rnd(.004, .012),
+      s: rnd(.035, .09), al: rnd(.025, .055), ph: rnd(TAU), tint: 1 + ((Math.random() * 2) | 0),
+    }));
+    meteors = []; sparks = [];
+  }
+
+  function newFaller(anywhere) {
+    const z = Math.random();                       // độ sâu: 0 xa, 1 gần
+    return {
+      x: Math.random(), y: anywhere ? rnd(-.2, 1.1) : rnd(-.3, -.02),
+      v: .05 + z * .19 + rnd(.02), len: .022 + z * .085,
+      w: 1.1 + z * 1.5, al: .22 + z * .6, ph: rnd(TAU),
+    };
+  }
+
+  function spawnMeteor() {
+    const ang = rnd(112, 134) * Math.PI / 180;     // rơi chéo xuống trái
+    const D = Math.hypot(W, H);
+    meteors.push({
+      x: W * rnd(.2, 1.15), y: H * rnd(-.08, .3),
+      dx: Math.cos(ang), dy: Math.sin(ang), rot: ang - Math.PI / 2,
+      v: D * rnd(.45, .75), len: D * rnd(.11, .2), w: rnd(2.4, 4),
+      life: 0, max: rnd(.9, 1.5), acc: 0,
+    });
+  }
+
+  /* ----- Khung hình ----- */
+  function resize() {
+    const r = stage.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+    dpr = Math.min(dpr, Math.sqrt(9e6 / (r.width * r.height)));
+    const w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+    const changed = w !== W || h !== H;
+    if (changed) { W = cv.width = w; H = cv.height = h; }
+    unit = Math.sqrt(W * H) / 1500;
+    // Vành sao ôm lấy khối chữ
+    const c = card.getBoundingClientRect();
+    let top = Infinity, bot = -Infinity;
+    for (const el of card.children) {
+      const b = el.getBoundingClientRect();
+      if (!b.height) continue;
+      top = Math.min(top, b.top); bot = Math.max(bot, b.bottom);
+    }
+    const half = isFinite(top) ? (bot - top) / 2 / r.height : .36;
+    ring = {
+      cx: W / 2, cy: H * ((isFinite(top) ? (top + bot) / 2 - r.top : r.height / 2) / r.height),
+      rx: W * .62, ry: H * Math.min(.44, Math.max(.26, half * 1.02)),
+    };
+    if (changed) draw(performance.now());        // vẽ lại ngay, tránh nháy đen khi đổi kích thước
+  }
+
+  let last = performance.now(), T = 0, slow = 0, frames = 0, cost = 0;
+
+  function frame(now) { requestAnimationFrame(frame); draw(now); }
+  function draw(now) {
+    const raw = (now - last) / 1000; last = now;
+    const dt = Math.max(0, Math.min(raw, .05)) * cfg.speed;
+    T += dt;
+    if (!W) return;
+    const t0 = performance.now();
+    const k = unit * cfg.size;
+
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'lighter';
+
+    // Đốm mờ
+    const m = Math.min(W, H);
+    for (const b of bokeh) {
+      b.y -= b.v * dt; if (b.y < -.15) { b.y = 1.15; b.x = Math.random(); }
+      const s = b.s * m * 2;
+      ctx.globalAlpha = b.al * (.6 + .4 * Math.sin(T * .4 + b.ph));
+      ctx.drawImage(dots[b.tint], b.x * W - s, b.y * H - s, s * 2, s * 2);
+    }
+
+    // Nền sao
+    let tint = -1;
+    let n = Math.round(fieldStars.length * quality);
+    for (let i = 0; i < fieldStars.length; i++) {
+      if (i % fieldStars.length >= n && quality < 1 && (i * 7919) % 100 >= quality * 100) continue;
+      const s = fieldStars[i];
+      if (s.tint !== tint) { tint = s.tint; ctx.fillStyle = `rgb(${THEMES[cfg.theme][tint]})`; }
+      const px = s.s * k;
+      ctx.globalAlpha = s.al * (.55 + .45 * Math.sin(T * s.tw + s.ph));
+      ctx.fillRect(s.x * W - px / 2, s.y * H - px / 2, px, px);
+    }
+
+    // Vành sao
+    tint = -1;
+    const { cx, cy, rx, ry } = ring;
+    for (let i = 0; i < ringStars.length; i++) {
+      if (quality < 1 && (i * 7919) % 100 >= quality * 100) continue;
+      const s = ringStars[i];
+      s.a += s.w * dt;
+      const co = Math.cos(s.a), si = Math.sin(s.a);
+      const x = cx + co * s.r * rx;
+      if (x < -8 || x > W + 8) continue;
+      const y = cy + si * s.r * ry + s.h * H;
+      const near = (si + 1) / 2;                   // 0 = phía xa (trên), 1 = phía gần (dưới)
+      const px = s.s * k * (.8 + .45 * near);
+      const wave = Math.sin(T * s.tw + s.ph);
+      const al = s.al * (.68 + .32 * near) * (.62 + .38 * wave);
+      if (s.tint !== tint) { tint = s.tint; ctx.fillStyle = `rgb(${THEMES[cfg.theme][tint]})`; }
+      ctx.globalAlpha = al;
+      if (px < 1.9) ctx.fillRect(x - px / 2, y - px / 2, px, px);
+      else ctx.drawImage(dots[tint], x - px * 1.6, y - px * 1.6, px * 3.2, px * 3.2);
+      if (s.flare && wave > .55) {
+        const f = (wave - .55) / .45, g = px * 9 * f;
+        ctx.globalAlpha = f * .9;
+        ctx.drawImage(glint, x - g, y - g, g * 2, g * 2);
+      }
+    }
+
+    // Bụi kim tuyến
+    for (const p of glitter) {
+      p.y += p.v * dt; if (p.y > 1.03) { p.y = -.03; p.x = Math.random(); }
+      const x = (p.x + Math.sin(T * p.sf + p.ph) * p.sw) * W, y = p.y * H;
+      const tw = Math.pow(.5 + .5 * Math.sin(T * p.tw + p.ph), 2);
+      const px = p.s * k * 2.4;
+      ctx.globalAlpha = p.al * (.15 + .85 * tw);
+      ctx.drawImage(dots[p.tint], x - px, y - px, px * 2, px * 2);
+    }
+
+    // Sao rơi thẳng
+    for (let i = 0; i < fallers.length; i++) {
+      const f = fallers[i];
+      f.y += f.v * dt;
+      const len = f.len * H;
+      if (f.y * H - len > H) { fallers[i] = newFaller(false); continue; }
+      const x = f.x * W, y = f.y * H, w = f.w * k * 1.6;
+      const al = f.al * (.75 + .25 * Math.sin(T * 3 + f.ph));
+      ctx.globalAlpha = al;
+      ctx.drawImage(streak, x - w / 2, y - len, w, len);
+      ctx.drawImage(dots[0], x - w * 1.4, y - w * 1.4, w * 2.8, w * 2.8);
+    }
+
+    // Sao băng
+    nextMeteor -= dt;
+    if (nextMeteor <= 0) { spawnMeteor(); nextMeteor = rnd(2.2, 6.5); }
+    for (let i = meteors.length - 1; i >= 0; i--) {
+      const s = meteors[i];
+      s.life += dt;
+      if (s.life > s.max) { meteors.splice(i, 1); continue; }
+      s.x += s.dx * s.v * dt; s.y += s.dy * s.v * dt;
+      const p = s.life / s.max;
+      const env = Math.pow(Math.sin(Math.PI * p), .7);
+      const w = s.w * k * 2, len = s.len * Math.min(1, p * 3.5);
+      ctx.save();
+      ctx.translate(s.x, s.y); ctx.rotate(s.rot);
+      ctx.globalAlpha = env;
+      ctx.drawImage(streak, -w / 2, -len, w, len);
+      ctx.restore();
+      const g = w * 3.2;
+      ctx.drawImage(glint, s.x - g, s.y - g, g * 2, g * 2);
+      // rắc bụi sáng dọc đường bay
+      s.acc += dt * 70;
+      while (s.acc > 1 && sparks.length < 320) {
+        s.acc--;
+        sparks.push({
+          x: s.x + rnd(-w, w), y: s.y + rnd(-w, w),
+          vx: rnd(-10, 10) * unit, vy: rnd(4, 26) * unit,
+          life: 0, max: rnd(.5, 1.4), s: rnd(1, 2.2),
+        });
+      }
+    }
+    for (let i = sparks.length - 1; i >= 0; i--) {
+      const s = sparks[i];
+      s.life += dt;
+      if (s.life > s.max) { sparks[i] = sparks[sparks.length - 1]; sparks.pop(); continue; }
+      s.x += s.vx * dt; s.y += s.vy * dt;
+      const px = s.s * k * 2;
+      ctx.globalAlpha = (1 - s.life / s.max) * .9;
+      ctx.drawImage(dots[1], s.x - px, s.y - px, px * 2, px * 2);
+    }
+    ctx.globalAlpha = 1;
+
+    // Tự hạ mật độ nếu máy không kịp 60 khung hình/giây
+    cost += performance.now() - t0; frames++;
+    if (raw > .024) slow++;
+    if (frames >= 180) {
+      if (slow > 90 && cost / frames > 5 && quality > .4) quality = Math.max(.4, quality * .8);
+      frames = slow = cost = 0;
+    }
+  }
+
+  /* ================= Giao diện ================= */
+  function applyText() {
+    for (const el of $$('[data-t]', card)) {
+      const v = (cfg[el.dataset.t] || '').trim();
+      el.textContent = v;
+      const box = el.closest('.card > *');
+      if (v) box.removeAttribute('data-empty'); else box.setAttribute('data-empty', '');
+    }
+    document.title = `${cfg.n1} & ${cfg.n2}`;
+  }
+  function applyLook() {
+    const ar = RATIOS[cfg.ratio];
+    stage.classList.toggle('auto', !ar);
+    if (ar) stage.style.setProperty('--ar', ar);
+    document.documentElement.dataset.theme = cfg.theme;
+    document.documentElement.style.setProperty('--bold', (cfg.bold * .008).toFixed(4) + 'em');
+    for (const seg of $$('[data-seg]'))
+      for (const b of $$('button', seg)) b.setAttribute('aria-pressed', b.dataset.v === cfg[seg.dataset.seg]);
+    for (const i of $$('[data-k]')) if (i !== document.activeElement) i.value = cfg[i.dataset.k];
+  }
+  function replay() {
+    card.classList.remove('play'); void card.offsetWidth; card.classList.add('play');
+  }
+  function set(k, v) {
+    cfg[k] = v; save();
+    if (k === 'theme') makeSprites();
+    if (k === 'density') seed();
+    applyText(); applyLook();
+    requestAnimationFrame(resize);
+  }
+  function fullscreen() {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen().catch(() => {});
+  }
+  const togglePanel = on => document.body.classList.toggle('panel-open', on);
+
+  for (const seg of $$('[data-seg]'))
+    seg.addEventListener('click', e => { const b = e.target.closest('button'); if (b) set(seg.dataset.seg, b.dataset.v); });
+  for (const i of $$('[data-k]'))
+    i.addEventListener('input', () => set(i.dataset.k, i.type === 'range' ? +i.value : i.value));
+  panel.addEventListener('click', e => {
+    const a = e.target.closest('[data-act]')?.dataset.act;
+    if (a === 'fs') fullscreen();
+    if (a === 'replay') replay();
+    if (a === 'home') location.href = '../';
+    if (a === 'reset') { Object.assign(cfg, DEFAULTS); save(); makeSprites(); seed(); applyText(); applyLook(); requestAnimationFrame(resize); }
+  });
+  $('#gear').addEventListener('click', () => togglePanel());
+  stage.addEventListener('dblclick', fullscreen);
+
+  addEventListener('keydown', e => {
+    if (e.target.matches('input') || e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === 'f') fullscreen();
+    else if (k === 'h') togglePanel();
+    else if (k === 'r') replay();
+    else if (k === 'escape') togglePanel(false);
+    else if (k === '0') set('ratio', 'auto');
+    else if (k === '1') set('ratio', '3:2');
+    else if (k === '2') set('ratio', '2:3');
+    else if (k === '3') set('ratio', '4:3');
+    else if (k === '4') set('ratio', '16:9');
+  });
+
+  // Ẩn con trỏ và nút khi không động chuột
+  let idleTimer;
+  const wake = () => {
+    document.body.classList.remove('idle');
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      if (!document.body.classList.contains('panel-open')) document.body.classList.add('idle');
+    }, 2500);
+  };
+  addEventListener('pointermove', wake); addEventListener('pointerdown', wake);
+  wake();
+  setTimeout(() => $('#hint').classList.add('off'), 7000);
+
+  // Giữ màn hình không tắt trong lúc trình chiếu
+  let lock;
+  const keepAwake = async () => {
+    try { if (!lock || lock.released) lock = await navigator.wakeLock?.request('screen'); } catch (e) {}
+  };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) { last = performance.now(); keepAwake(); } });
+  addEventListener('pointerdown', keepAwake, { once: true });
+  keepAwake();
+
+  /* ================= Khởi động ================= */
+  applyText(); applyLook(); makeSprites(); seed(); resize();
+  new ResizeObserver(resize).observe(stage);
+  if (new URLSearchParams(location.search).has('tinh')) card.classList.add('still');   // ?tinh=1: bỏ hiệu ứng mở đầu
+  (document.fonts?.ready || Promise.resolve()).then(() => { resize(); if (!card.classList.contains('still')) replay(); });
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

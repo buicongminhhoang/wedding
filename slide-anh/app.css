@@ -1,0 +1,177 @@
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; background: #000; overflow: hidden; }
+body {
+  display: grid; place-items: center;
+  font-family: "Cormorant Garamond", "Times New Roman", serif;
+  color: #f3efe6;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+}
+body.idle { cursor: none; }
+img { display: block; }
+
+/* ---------- Khung trình chiếu ---------- */
+.stage {
+  --ar: 1.5;
+  position: relative;
+  width: min(100vw, calc(100vh * var(--ar)));
+  height: min(100vh, calc(100vw / var(--ar)));
+  background: #000;
+  overflow: hidden;
+  container: stage / size;
+  isolation: isolate;
+}
+.stage.auto { width: 100vw; height: 100vh; }
+body.panel-open .stage { outline: 1px dashed rgba(255, 255, 255, .28); }
+.layer, .layer > .style { position: absolute; inset: 0; overflow: hidden; }
+
+.grain {
+  position: absolute; inset: -64px; z-index: 5; pointer-events: none;
+  opacity: .075; mix-blend-mode: overlay;
+  animation: grain .6s steps(6) infinite;
+}
+.grain[hidden] { display: none; }
+@keyframes grain {
+  0% { transform: translate(0, 0); } 20% { transform: translate(-31px, 17px); }
+  40% { transform: translate(23px, -41px); } 60% { transform: translate(-47px, -13px); }
+  80% { transform: translate(37px, 29px); } 100% { transform: translate(0, 0); }
+}
+
+.sig {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 6;
+  padding: 7cqmin 0 2.6cqmin; text-align: center; pointer-events: none;
+  background: linear-gradient(transparent, rgba(0, 0, 0, .55));
+  transition: opacity 1s;
+  text-shadow: 0 0 1.2cqmin rgba(0, 0, 0, .9);
+}
+.sig.off { opacity: 0; }
+.sig b { font: 400 4.6cqmin/1 "Pinyon Script", cursive; margin-right: 1.6cqmin; }
+.sig span { font-size: 1.9cqmin; letter-spacing: .38em; opacity: .85; vertical-align: .5cqmin; }
+
+/* ---------- Thanh công cụ ---------- */
+.bar, .board, .toast { font: 500 15px/1.4 system-ui, "Segoe UI", sans-serif; color: #eef0f8; }
+.bar {
+  position: fixed; left: 50%; top: 14px; z-index: 20; translate: -50% 0;
+  display: flex; align-items: center; gap: 6px; padding: 8px; border-radius: 14px; max-width: calc(100vw - 20px);
+  background: rgba(16, 18, 28, .88); backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, .16); box-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+  transition: opacity .4s, translate .4s; white-space: nowrap;
+}
+body.idle .bar { opacity: 0; translate: -50% -20px; pointer-events: none; }
+.bar .sep { width: 1px; height: 24px; background: rgba(255, 255, 255, .18); margin: 0 4px; }
+.bar .now { min-width: 110px; text-align: center; color: #f0dcae; font-weight: 600; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.bar button, .board button {
+  padding: 8px 13px; border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .06);
+  transition: background .15s;
+}
+.bar button:hover, .board button:hover { background: rgba(255, 255, 255, .15); }
+.bar button i { font-style: normal; opacity: .7; margin-right: 3px; }
+.bar button b { font-weight: 600; color: #f0dcae; margin-left: 4px; }
+.bar .hot, .board .big, .board .done { background: #f0dcae; color: #17130a; border-color: transparent; font-weight: 600; }
+.bar .hot:hover, .board .big:hover, .board .done:hover { background: #fff0c9; }
+.toast {
+  position: fixed; left: 50%; bottom: 26px; z-index: 30; translate: -50% 0; padding: 10px 18px; border-radius: 999px;
+  background: rgba(16, 18, 28, .9); border: 1px solid rgba(255, 255, 255, .16);
+  opacity: 0; transition: opacity .5s; pointer-events: none; white-space: nowrap;
+}
+.toast.on { opacity: 1; }
+kbd { font: inherit; padding: 1px 7px; border-radius: 5px; background: rgba(255, 255, 255, .13); }
+code { font: 13px Consolas, monospace; background: rgba(255, 255, 255, .1); padding: 1px 6px; border-radius: 5px; }
+
+/* ---------- Bảng điều khiển ---------- */
+.board {
+  position: fixed; inset: 0; z-index: 25; display: none; place-items: center;
+  background: rgba(0, 0, 0, .55);
+}
+body.board-open .board { display: grid; }
+body.board-open { cursor: auto !important; }
+.sheet {
+  width: min(1040px, 96vw); height: min(780px, 94vh); display: flex; flex-direction: column;
+  background: #14161f; border: 1px solid rgba(255, 255, 255, .14); border-radius: 18px;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, .7); overflow: hidden;
+}
+.sheet header { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid rgba(255, 255, 255, .1); background: #191c28; }
+.tabs { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; }
+.tabs button { font-size: 16px; padding: 10px 18px; border-color: transparent; background: transparent; color: #a9aecb; }
+.tabs button[aria-selected=true] { background: rgba(240, 220, 174, .14); color: #f0dcae; border-color: rgba(240, 220, 174, .4); }
+.board .done { font-size: 16px; padding: 10px 22px; }
+.sheet section { display: none; flex: 1; overflow: auto; padding: 18px 20px 22px; gap: 14px; flex-direction: column; }
+.sheet section.on { display: flex; }
+.sheet h3 { font-size: 13px; font-weight: 600; color: #a9aecb; margin-bottom: 8px; }
+.sheet h3 output { color: #f0dcae; font-size: 15px; }
+.opts { display: flex; flex-wrap: wrap; gap: 12px; }
+.opt { background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .08); border-radius: 12px; padding: 12px 14px; min-width: 220px; }
+.opt.grow { flex: 1; }
+.opt.dim { opacity: .4; }
+.row, .seg { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.seg button[aria-pressed=true] { background: #f0dcae; color: #17130a; border-color: transparent; font-weight: 600; }
+.tip { font-size: 13px; color: #8f95b3; line-height: 1.6; }
+.sheet input[type=range] { width: 100%; accent-color: #f0dcae; }
+.sheet input[type=checkbox] { accent-color: #f0dcae; width: 17px; height: 17px; }
+.sheet input[type=text] {
+  width: 100%; font: inherit; color: #fff; padding: 9px 12px; border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, .18); background: rgba(255, 255, 255, .06); user-select: text;
+}
+.chk { display: flex; align-items: center; gap: 9px; padding: 5px 0; cursor: pointer; }
+
+/* Thẻ mẫu */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 10px; }
+.card-s { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px; cursor: pointer;
+  background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .1); }
+.card-s:hover { background: rgba(255, 255, 255, .09); }
+.card-s.cur { border-color: #f0dcae; background: rgba(240, 220, 174, .1); }
+.card-s .num { font: 600 13px/28px system-ui; width: 28px; height: 28px; text-align: center; border-radius: 50%; background: rgba(255, 255, 255, .1); flex: none; }
+.card-s.cur .num { background: #f0dcae; color: #17130a; }
+.card-s .txt { flex: 1; }
+.card-s .txt b { display: block; font-size: 16px; }
+.card-s .txt span { font-size: 12.5px; color: #9aa0bf; }
+.card-s.out .txt { opacity: .45; }
+.sw { position: relative; width: 44px; height: 24px; flex: none; }
+.sw input { position: absolute; inset: 0; opacity: 0; cursor: pointer; margin: 0; width: 100%; height: 100%; }
+.sw i { position: absolute; inset: 0; border-radius: 99px; background: rgba(255, 255, 255, .16); transition: .2s; pointer-events: none; }
+.sw i::after { content: ""; position: absolute; left: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: .2s; }
+.sw input:checked + i { background: #d9b96a; }
+.sw input:checked + i::after { left: 23px; }
+
+/* Lưới chọn ảnh */
+.thumbs { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+.th { position: relative; aspect-ratio: 1; border-radius: 8px; overflow: hidden; cursor: pointer; background: #222; border: 2px solid transparent; }
+.th img { width: 100%; height: 100%; object-fit: cover; transition: opacity .15s, filter .15s; }
+.th::after { content: "✓"; position: absolute; right: 6px; top: 6px; width: 24px; height: 24px; border-radius: 50%;
+  font: 700 15px/24px system-ui; text-align: center; background: #d9b96a; color: #17130a; box-shadow: 0 2px 6px rgba(0, 0, 0, .5); }
+.th.off img { opacity: .28; filter: grayscale(1); }
+.th.off::after { content: ""; background: rgba(0, 0, 0, .5); border: 2px solid rgba(255, 255, 255, .6); width: 20px; height: 20px; }
+.th:hover { border-color: #f0dcae; }
+
+/* Nhạc */
+.drop { display: grid; gap: 4px; place-items: center; text-align: center; padding: 22px; border-radius: 14px; cursor: pointer;
+  border: 2px dashed rgba(240, 220, 174, .5); background: rgba(240, 220, 174, .06); }
+.drop:hover, .drop.over { background: rgba(240, 220, 174, .16); }
+.drop strong { font-size: 18px; color: #f0dcae; }
+.drop span { font-size: 13px; color: #9aa0bf; }
+.player { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.player .big { font-size: 16px; padding: 10px 20px; min-width: 150px; }
+.player .vol { display: flex; align-items: center; gap: 8px; margin-left: auto; font-size: 13px; color: #a9aecb; width: 240px; }
+.nowplay { font-size: 14px; color: #f0dcae; min-height: 20px; }
+.tracks { display: grid; gap: 6px; }
+.tr { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 10px; background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .08); }
+.tr.cur { border-color: #f0dcae; background: rgba(240, 220, 174, .1); }
+.tr .nm { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tr .nm small { color: #7e84a3; margin-left: 8px; }
+.tr button { padding: 5px 10px; font-size: 13px; }
+.tracks .empty { padding: 26px; text-align: center; color: #8f95b3; border-radius: 10px; background: rgba(255, 255, 255, .03); }
+
+/* ---------- Chữ chạy theo nhịp ---------- */
+.w { display: inline-block; margin-right: .26em; vertical-align: bottom; }
+.w[data-mode=rise] { overflow: hidden; padding: 0 .06em .14em; margin: 0 .2em -.14em -.06em; }
+.w > span { display: inline-block; will-change: transform, opacity; }
+.cap-b {
+  position: absolute; left: 5cqmin; right: 5cqmin; bottom: 12.5cqmin; z-index: 3; pointer-events: none;
+  font: italic 500 5.2cqmin/1.2 "Playfair Display", serif; color: #fff;
+  text-shadow: 0 .3cqmin 2.4cqmin rgba(0, 0, 0, .85), 0 0 .6cqmin rgba(0, 0, 0, .6);
+}
+.bar .home { padding: 8px 12px; border-radius: 9px; text-decoration: none; color: inherit;
+  border: 1px solid rgba(255, 255, 255, .16); background: rgba(255, 255, 255, .06); }
+.bar .home:hover { background: rgba(255, 255, 255, .15); }

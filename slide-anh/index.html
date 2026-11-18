@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Ảnh cưới Minh Hoàng &amp; Kim Ngân</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<main class="stage" id="stage">
+  <div class="layer" id="layer"></div>
+  <div class="grain" id="grain"></div>
+  <div class="sig" id="sig"><b></b><span></span></div>
+</main>
+
+<!-- Thanh công cụ: hiện khi rê chuột, tự ẩn khi trình chiếu -->
+<nav class="bar" id="bar">
+  <a class="home" href="../" title="Về trang chọn">⌂</a>
+  <button data-act="tab:styles"><i>▦</i> Mẫu trình chiếu</button>
+  <button data-act="tab:photos"><i>▣</i> Chọn ảnh <b id="barPhotos"></b></button>
+  <button data-act="tab:music"><i>♪</i> Nhạc nền <b id="barMusic"></b></button>
+  <button data-act="tab:screen"><i>◱</i> Màn hình &amp; chữ</button>
+  <span class="sep"></span>
+  <button data-act="prev" title="Mẫu trước (←)">◀</button>
+  <span class="now" id="barStyle"></span>
+  <button data-act="next" title="Mẫu sau (→)">▶</button>
+  <span class="sep"></span>
+  <button data-act="mtoggle" id="barPlay" title="Bật / tắt nhạc (M)">♪ Bật nhạc</button>
+  <button data-act="fs" class="hot" title="Toàn màn hình (F)">⛶ Toàn màn hình</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<!-- Bảng điều khiển -->
+<div class="board" id="board">
+  <div class="sheet">
+    <header>
+      <div class="tabs" id="tabs">
+        <button data-tab="styles">Mẫu trình chiếu</button>
+        <button data-tab="photos">Chọn ảnh</button>
+        <button data-tab="music">Nhạc nền</button>
+        <button data-tab="screen">Màn hình &amp; chữ</button>
+      </div>
+      <button class="done" data-act="close">Xong ✓</button>
+    </header>
+
+    <section data-pane="styles">
+      <div class="opts">
+        <div class="opt">
+          <h3>Cách chạy</h3>
+          <div class="seg" data-seg="mode">
+            <button data-v="auto">Tự đổi lần lượt các mẫu</button>
+            <button data-v="one">Chỉ chiếu một mẫu</button>
+          </div>
+        </div>
+        <label class="opt"><h3>Mỗi ảnh hiện khoảng <output data-o="dur"></output> giây</h3>
+          <input type="range" data-k="dur" min="3" max="15" step="0.5"></label>
+        <label class="opt" id="optRotate"><h3>Đổi mẫu sau mỗi <output data-o="rotate"></output> phút</h3>
+          <input type="range" data-k="rotate" min="1" max="15" step="0.5"></label>
+      </div>
+      <label class="chk"><input type="checkbox" data-k="sync"> Đổi ảnh và cho chữ chạy ra theo nhịp bài nhạc đang phát (đoạn cao trào đổi nhanh, đoạn lắng giữ lâu)</label>
+      <p class="tip">Bấm vào một mẫu để chiếu ngay. Công tắc bên phải quyết định mẫu đó có nằm trong vòng tự đổi hay không.</p>
+      <div class="cards" id="styleList"></div>
+    </section>
+
+    <section data-pane="photos">
+      <div class="opts">
+        <div class="opt grow">
+          <h3 id="photoCount"></h3>
+          <div class="row">
+            <button data-act="pall">Chọn tất cả</button>
+            <button data-act="pnone">Bỏ chọn tất cả</button>
+            <span id="photoGroups" class="row"></span>
+          </div>
+        </div>
+        <div class="opt">
+          <h3>Thứ tự chiếu</h3>
+          <div class="seg" data-seg="order">
+            <button data-v="shuffle">Trộn ngẫu nhiên</button>
+            <button data-v="seq">Theo tên file</button>
+          </div>
+        </div>
+      </div>
+      <p class="tip">Bấm vào ảnh để đưa vào hoặc bỏ khỏi slide. Ảnh có dấu ✓ sẽ được chiếu. Đổi tên nhóm: đổi tên file trong <code>photos/s</code> rồi chạy <code>python prep.py</code>.</p>
+      <div class="thumbs" id="thumbs"></div>
+    </section>
+
+    <section data-pane="music">
+      <div class="player">
+        <button data-act="mtoggle" id="mPlay" class="big">▶ Phát nhạc</button>
+        <button data-act="mnext">Bài kế ⏭</button>
+        <button data-act="mall">Tick tất cả</button>
+        <button data-act="mnone">Bỏ tick tất cả</button>
+        <div class="seg" data-seg="mshuffle">
+          <button data-v="no">Phát theo thứ tự</button>
+          <button data-v="yes">Phát ngẫu nhiên</button>
+        </div>
+        <label class="vol">Âm lượng <input type="range" data-k="vol" min="0" max="1" step="0.02"></label>
+      </div>
+      <div class="nowplay" id="nowPlay"></div>
+      <div class="tracks" id="trackList"></div>
+      <p class="tip">Bài có dấu tick sẽ được phát, hết danh sách thì lặp lại. Thêm nhạc: bỏ file (mp3, m4a, wav…) vào thư mục <code>music</code>, chạy <code>python prep.py</code> rồi tải lại trang (hoặc đẩy lên GitHub).</p>
+    </section>
+
+    <section data-pane="screen">
+      <div class="opt">
+        <h3>Tỉ lệ màn hình</h3>
+        <div class="seg" data-seg="ratio">
+          <button data-v="auto">Vừa khít màn hình</button>
+          <button data-v="3:2">3:2 (màn 3×2 m)</button>
+          <button data-v="2:3">2:3 (màn 2×3 m)</button>
+          <button data-v="4:3">4:3</button>
+          <button data-v="16:9">16:9</button>
+          <button data-v="3:4">3:4</button>
+        </div>
+      </div>
+      <div class="opts">
+        <label class="opt grow"><h3>Tên thứ nhất</h3><input type="text" data-k="n1"></label>
+        <label class="opt grow"><h3>Tên thứ hai</h3><input type="text" data-k="n2"></label>
+        <label class="opt grow"><h3>Ngày</h3><input type="text" data-k="date"></label>
+      </div>
+      <div class="opt">
+        <h3>Lớp phủ</h3>
+        <label class="chk"><input type="checkbox" data-k="sig"> Hiện tên hai bạn và ngày cưới ở mép dưới</label>
+        <label class="chk"><input type="checkbox" data-k="grain"> Phủ hạt phim nhẹ lên ảnh</label>
+      </div>
+      <div class="row">
+        <button data-act="fs" class="big">⛶ Toàn màn hình</button>
+        <button data-act="reset">Đặt lại cài đặt màn hình</button>
+      </div>
+      <p class="tip">Phím tắt: <kbd>F</kbd> toàn màn hình · <kbd>H</kbd> mở bảng này · <kbd>←</kbd> <kbd>→</kbd> đổi mẫu · <kbd>M</kbd> bật/tắt nhạc · <kbd>N</kbd> bài kế · <kbd>0</kbd>–<kbd>4</kbd> đổi tỉ lệ</p>
+    </section>
+  </div>
+</div>
+
+<script src="photos.js"></script>
+<script src="music.js"></script>
+<script src="js/core.js"></script>
+<script src="js/music.js"></script>
+<script src="js/s-cine.js"></script>
+<script src="js/s-mag.js"></script>
+<script src="js/s-film.js"></script>
+<script src="js/s-pola.js"></script>
+<script src="js/s-wall.js"></script>
+<script src="js/s-grid.js"></script>
+<script src="js/s-galaxy.js"></script>
+<script src="js/s-split.js"></script>
+<script>SL.start();</script>
+</body>
+</html>
