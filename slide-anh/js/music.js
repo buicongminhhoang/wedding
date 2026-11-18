@@ -161,5 +161,6 @@
   SL.onSync(() => { if (cfg.vol !== lastVol) { lastVol = cfg.vol; if (wanted) { cancelAnimationFrame(fadeT); audio.volume = cfg.vol; } } });
 
   render();
-  if (cfg.mplay && enabled().length) play();
+  // ?nhac=0: mở từ bảng nhạc buổi lễ, không tự phát nhạc của slide
+  if (cfg.mplay && enabled().length && new URLSearchParams(location.search).get('nhac') !== '0') play();
 })();
