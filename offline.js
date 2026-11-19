@@ -37,7 +37,7 @@
   /** Trang, mã, danh sách và font: luôn tải lại bản mới mỗi lần bấm tải. */
   async function shellList() {
     const list = ['./', 'index.html', 'offline.js', 'manifest.webmanifest', 'nhac-le/board.css', 'nhac-le/board.js', 'nhac-le/list.js',
-      'sao-roi/', 'sao-roi/index.html', 'sao-roi/fonts/fonts.css',
+      'sao-roi/', 'sao-roi/index.html', 'doi-man/', 'doi-man/index.html', 'sao-roi/fonts/fonts.css',
       'slide-anh/', 'slide-anh/index.html', 'slide-anh/app.css', 'slide-anh/photos.js', 'slide-anh/skip.js', 'slide-anh/music.js',
       'slide-anh/fonts/fonts.css', ...SLIDE_JS.map(n => `slide-anh/js/${n}.js`)].map(abs);
     for (const css of ['sao-roi/fonts/fonts.css', 'slide-anh/fonts/fonts.css']) {

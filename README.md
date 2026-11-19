@@ -6,6 +6,7 @@ Trang web tĩnh chiếu trong lễ cưới Minh Hoàng & Kim Ngân (29.11.2026).
 |---|---|
 | `/` | Trang chọn: chiếu màn sao rơi hay slide ảnh cưới |
 | `/sao-roi/` | Màn sao rơi với tên cô dâu chú rể |
+| `/doi-man/` | Hai màn LED hai bên sân khấu chiếu chung một trời sao (`?man=trai`, `?man=phai`, `?man=lien`, `?man=xem`) |
 | `/slide-anh/` | Slide ảnh cưới, tám mẫu, chạy theo nhịp nhạc |
 | `/nhac-le/` | Nhạc cho 15 hạng mục của buổi lễ, dùng bởi bảng nhạc trên trang chọn |
 

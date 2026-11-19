@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#000000">
+<meta name="robots" content="noindex, nofollow">
+<title>Đôi màn · Minh Hoàng &amp; Kim Ngân</title>
+<link rel="stylesheet" href="../sao-roi/fonts/fonts.css">
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: #000; overflow: hidden; }
+  body { font: 16px/1.5 system-ui, "Segoe UI", sans-serif; color: #e6e9fb; }
+  body.idle { cursor: none; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #panel { position: fixed; inset: 0; display: none; place-items: center; background: rgba(0, 0, 0, .72); padding: 16px; overflow: auto; }
+  body.open #panel { display: grid; }
+  .sheet { width: min(720px, 100%); display: grid; gap: 14px; padding: 22px; border-radius: 18px;
+    background: rgba(18, 20, 30, .96); border: 1px solid rgba(255, 255, 255, .14); }
+  .sheet h1 { font: 600 26px/1.2 "Cormorant Garamond", serif; color: #f0dcae; }
+  .sheet h2 { font-size: 14px; font-weight: 600; color: #a9aecb; margin-bottom: 6px; }
+  .sheet p { font-size: 14px; color: #a9aecb; }
+  .row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  button, .row a { font: inherit; color: inherit; cursor: pointer; padding: 10px 14px; border-radius: 10px; min-height: 42px; text-decoration: none;
+    background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .16); }
+  button:hover, .row a:hover { background: rgba(255, 255, 255, .15); }
+  [aria-pressed=true] { background: #f0dcae; color: #17130a; border-color: transparent; font-weight: 600; }
+  kbd { padding: 1px 7px; border-radius: 5px; background: rgba(255, 255, 255, .12); color: #e6e9fb; }
+  output { min-width: 5.5em; text-align: center; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="panel">
+  <div class="sheet">
+    <h1>Đôi màn: hai màn LED hai bên sân khấu</h1>
+    <div><h2>Cửa sổ này là màn nào</h2>
+      <div class="row" id="roles">
+        <a data-man="trai">Màn trái</a><a data-man="phai">Màn phải</a>
+        <a data-man="lien" title="Một cửa sổ trải ngang qua cả hai màn LED">Một cửa sổ trải cả hai màn</a>
+        <a data-man="xem">Xem thử cả hai</a>
+      </div>
+    </div>
+    <div><h2>Cảnh (đổi ở một cửa sổ, cửa sổ kia trên cùng máy đổi theo)</h2>
+      <div class="row" id="scenes"></div>
+    </div>
+    <div><h2>Khoảng hở giữa hai màn, tính bằng số lần bề rộng một màn</h2>
+      <div class="row"><button data-ho="-0.25">Hẹp hơn</button><output id="hoOut"></output><button data-ho="0.25">Rộng hơn</button></div>
+    </div>
+    <div><h2>Chỉnh lệch giờ (chỉ cần khi hai màn chạy trên hai máy khác nhau)</h2>
+      <div class="row"><button data-off="-50">Sớm hơn 0,05 s</button><output id="offOut"></output><button data-off="50">Trễ hơn 0,05 s</button>
+        <button id="testBtn">Vạch thử đồng bộ</button></div>
+    </div>
+    <div class="row"><button id="fsBtn">⛶ Toàn màn hình</button><button id="closeBtn">Đóng</button><a href="../">Về trang chọn</a></div>
+    <p>Phím: <kbd>F</kbd> toàn màn hình · <kbd>H</kbd> bảng này · <kbd>0</kbd> tự đổi cảnh · <kbd>1</kbd>–<kbd>5</kbd> chọn cảnh · <kbd>[</kbd> <kbd>]</kbd> chỉnh lệch giờ · <kbd>T</kbd> vạch thử.
+      Hai màn khớp nhau nhờ đồng hồ máy, không cần mạng. Hai máy khác nhau: bật vạch thử trên cả hai, chỉnh tới khi vạch chạy liền mạch từ màn trái qua màn phải.</p>
+  </div>
+</div>
+
+<script src="../slide-anh/photos.js"></script>
+<script src="../slide-anh/skip.js"></script>
+<script>
+(() => {
+  'use strict';
+  /* Hai màn LED là hai ô cửa nhìn vào CÙNG một bầu trời. Trục ngang tính bằng bề rộng một màn:
+     màn trái chiếm [0, 1], sân khấu che [1, 1 + G], màn phải chiếm [1 + G, 2 + G]. Trục dọc: [0, 1] là chiều cao màn.
+     Mọi chuyển động là hàm của giờ đồng hồ (Date.now), không dùng số ngẫu nhiên: hai máy không nối mạng vẫn vẽ cùng một cảnh. */
+  const q = new URLSearchParams(location.search);
+  const KEY = 'doi-man-v1';
+  const st = { canh: 0, off: 0, ho: 2 };
+  const read = () => { try { Object.assign(st, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) {} };
+  read();
+  if (q.has('canh')) st.canh = +q.get('canh') || 0;
+  if (q.has('ho')) st.ho = parseFloat(q.get('ho')) || 2;
+  if (q.has('lech')) st.off = +q.get('lech') || 0;
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
+  const MAN = ['trai', 'phai', 'lien', 'xem'].includes(q.get('man')) ? q.get('man') : '';
+  const N1 = q.get('ten1') || 'Minh Hoàng', N2 = q.get('ten2') || 'Kim Ngân';
+  const DATE = q.get('ngay') || '29 . 11 . 2026', TITLE = q.get('tieude') || 'Lễ Thành Hôn';
+  const RATIO = (() => { const m = /^(\d+(?:\.\d+)?)[x:×](\d+(?:\.\d+)?)$/.exec(q.get('ratio') || ''); return m ? m[1] / m[2] : 1.5; })();
+  const SCENES = ['Sao băng', 'Sợi tơ sao', 'Đôi sao', 'Vầng sáng', 'Ảnh bay qua'];
+  const TURN = 75;                                   // giây mỗi cảnh khi tự đổi
+
+  const cv = document.getElementById('cv'), g = cv.getContext('2d');
+  const TAU = Math.PI * 2, clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const ease = p => p * p * (3 - 2 * p);
+  /** Số "ngẫu nhiên" cố định trong [0, 1) theo (n, s): mọi máy ra cùng một giá trị. */
+  function h(n, s = 0) {
+    let x = Math.imul((n | 0) ^ Math.imul(s + 1, 0x9E3779B1), 0x85EBCA6B);
+    x ^= x >>> 13; x = Math.imul(x, 0xC2B2AE35); x ^= x >>> 16;
+    return (x >>> 0) / 4294967296;
+  }
+  let G = st.ho, WD = 2 + G, W = 0, H = 0, vps = [], stars = [], test = q.has('thu');
+
+  function layout() {
+    G = clamp(st.ho, 0, 8); WD = 2 + G;
+    const d = Math.min(devicePixelRatio || 1, 2);
+    W = cv.width = Math.round(innerWidth * d); H = cv.height = Math.round(innerHeight * d);
+    if (MAN === 'phai') vps = [{ wx: 1 + G, px: 0, py: 0, pw: W, ph: H }];
+    else if (MAN === 'lien') vps = [{ wx: 0, px: 0, py: 0, pw: W / 2, ph: H }, { wx: 1 + G, px: W / 2, py: 0, pw: W / 2, ph: H }];
+    else if (MAN === 'xem' || !MAN) {
+      const pw = Math.min(W * .96 / WD, H * .8 * RATIO), ph = pw / RATIO, x0 = (W - pw * WD) / 2, py = (H - ph) / 2;
+      vps = [{ wx: 0, px: x0, py, pw, ph }, { wx: 1 + G, px: x0 + (1 + G) * pw, py, pw, ph }];
+    } else vps = [{ wx: 0, px: 0, py: 0, pw: W, ph: H }];
+    for (const v of vps) {
+      v.u = Math.min(v.pw, v.ph) / 100; v.left = v.wx === 0; v.tall = v.ph > v.pw * 1.1;
+      v.x = x => v.px + (x - v.wx) * v.pw; v.y = y => v.py + y * v.ph;
+      v.sees = (x, pad = .1) => x > v.wx - pad && x < v.wx + 1 + pad;
+    }
+    // Sao nền rải trên cả bầu trời (kể cả phần sân khấu che), chấm nhỏ sắc như vải chấm sao của rạp
+    stars = Array.from({ length: Math.round(190 * WD) }, (_, i) => ({
+      x: h(i, 11) * WD, y: h(i, 12), s: .16 + h(i, 13) ** 3 * .5, a: .25 + h(i, 14) * .75, tw: .3 + h(i, 15) * 1.6, ph: h(i, 16) * TAU,
+      warm: h(i, 17) < .18,
+    }));
+  }
+
+  /* ---------- Thành phần dùng chung ---------- */
+  function sky(v, t) {
+    for (const s of stars) {
+      if (!v.sees(s.x, 0)) continue;
+      g.globalAlpha = s.a * (.55 + .45 * Math.sin(t * s.tw + s.ph));
+      g.fillStyle = s.warm ? '#ffe9bf' : '#dfe6ff';
+      const r = Math.max(.6, s.s * v.u);
+      g.beginPath(); g.arc(v.x(s.x), v.y(s.y), r, 0, TAU); g.fill();
+    }
+    g.globalAlpha = 1;
+  }
+  function glowDot(x, y, r, color, a = 1) {
+    const gr = g.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, color); gr.addColorStop(1, 'rgba(0,0,0,0)');
+    g.globalAlpha = a; g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.globalAlpha = 1;
+  }
+  /** Ngôi sao bốn cánh. */
+  function spark(x, y, r, a, color = '#fff') {
+    g.globalAlpha = a; g.fillStyle = color; g.beginPath();
+    for (let i = 0; i < 8; i++) { const rr = i % 2 ? r * .22 : r, an = i * TAU / 8; g.lineTo(x + Math.cos(an) * rr, y + Math.sin(an) * rr); }
+    g.fill(); g.globalAlpha = 1;
+  }
+  function heart(x, y, s, a, color) {
+    g.save(); g.translate(x, y); g.scale(s, s); g.globalAlpha = a; g.fillStyle = color; g.shadowColor = color; g.shadowBlur = s * 1.2;
+    g.beginPath(); g.moveTo(0, .35); g.bezierCurveTo(-1.1, -.35, -.55, -1.05, 0, -.45); g.bezierCurveTo(.55, -1.05, 1.1, -.35, 0, .35); g.fill();
+    g.restore();
+  }
+  /** Tên trên từng màn: màn trái tên thứ nhất, màn phải tên thứ hai. glow 0..1: sáng bừng khi có thứ chạm tới. */
+  function name(v, glow = 0, y = .42, k = 1) {
+    const txt = v.left ? N1 : N2, cx = v.px + v.pw / 2, cy = v.y(y);
+    let fs = Math.min(v.pw * .2, v.ph * .27) * k;
+    g.font = `400 ${fs}px "Pinyon Script", cursive`;
+    const mw = g.measureText(txt).width;
+    if (mw > v.pw * .88) { fs *= v.pw * .88 / mw; g.font = `400 ${fs}px "Pinyon Script", cursive`; }
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.shadowColor = `rgba(${150 + 90 * glow},${170 + 50 * glow},255,${.55 + .45 * glow})`; g.shadowBlur = fs * (.16 + .5 * glow);
+    g.fillStyle = `rgb(${230 + 25 * glow},${233 + 10 * glow},${251 - 40 * glow})`;
+    g.fillText(txt, cx, cy);
+    if (glow > .05) { g.globalAlpha = glow * .7; g.fillText(txt, cx, cy); g.globalAlpha = 1; }
+    g.shadowBlur = 0;
+    const fs2 = Math.max(10, fs * .17);
+    g.font = `500 ${fs2}px "Cormorant Garamond", serif`;
+    if ('letterSpacing' in g) g.letterSpacing = `${fs2 * .42}px`;
+    g.fillStyle = 'rgba(169,174,203,.9)';
+    g.fillText(v.left ? TITLE.toUpperCase() : DATE, cx + fs2 * .21, cy + fs * .78);
+    if ('letterSpacing' in g) g.letterSpacing = '0px';
+  }
+  const nameX = v => v.wx + .5;
+
+  /* ---------- Cảnh 1. Sao băng bay từ màn này, qua sau sân khấu, sang màn kia ---------- */
+  function comets(v, t) {
+    const P = 2.4, k0 = Math.floor(t / P);
+    let glow = 0;
+    for (let k = k0 - 6; k <= k0; k++) {
+      const big = ((k % 5) + 5) % 5 === 0, dir = big ? (((k / 5) | 0) % 2 ? -1 : 1) : (h(k, 1) < .5 ? 1 : -1);
+      const sp = big ? .5 : .75 + h(k, 2) * .6, dt = t - (k * P + h(k, 3) * P * .7);
+      if (dt < 0) continue;
+      const len = big ? 1.05 : .3 + h(k, 6) * .35, slope = big ? .05 : (h(k, 5) - .25) * .16;
+      const hx = (dir > 0 ? -.2 : WD + .2) + dir * sp * dt, hy = (big ? .14 + h(k, 4) * .12 : .04 + h(k, 4) * .7) + slope * sp * dt;
+      const tx = hx - dir * len, ty = hy - slope * len;
+      if (big) glow = Math.max(glow, Math.exp(-(((hx - nameX(v)) / .5) ** 2)));
+      if (!v.sees(hx, len + .1)) continue;
+      const X = v.x(hx), Y = v.y(hy), TX = v.x(tx), TY = v.y(ty);
+      const gr = g.createLinearGradient(TX, TY, X, Y);
+      gr.addColorStop(0, 'rgba(160,180,255,0)'); gr.addColorStop(.7, big ? 'rgba(255,225,170,.45)' : 'rgba(200,215,255,.4)'); gr.addColorStop(1, '#fff');
+      g.strokeStyle = gr; g.lineWidth = v.u * (big ? 1 : .32); g.lineCap = 'round';
+      g.beginPath(); g.moveTo(TX, TY); g.lineTo(X, Y); g.stroke();
+      glowDot(X, Y, v.u * (big ? 7 : 2), big ? 'rgba(255,236,196,.9)' : 'rgba(220,230,255,.9)');
+      if (big) for (let j = 1; j < 26; j++) {             // bụi sao rơi lại sau đuôi
+        const f = j / 26, jx = hx - dir * len * f * 1.25, jy = hy - slope * len * f + (h(k * 64 + j, 7) - .5) * .09 * f + .05 * f * f;
+        if (v.sees(jx, 0)) spark(v.x(jx), v.y(jy), v.u * (.5 + h(k * 64 + j, 8) * 1.1), (1 - f) * (.5 + .5 * Math.sin(t * 8 + j * 1.7)), j % 3 ? '#fff' : '#ffe3a8');
+      }
+    }
+    name(v, glow);
+  }
+
+  /* ---------- Cảnh 2. Sợi tơ sao nối hai cái tên, trái tim chạy qua lại trên sợi tơ ---------- */
+  function thread(v, t) {
+    const A = .5, B = WD - .5, P = 1.5, T = 5.6, k0 = Math.floor(t / P);
+    const fy = x => { const e = Math.sin(Math.PI * clamp((x - A) / (B - A))); return .72 + e * (.07 * Math.sin(x * 2.3 + t * .7) + .035 * Math.sin(x * 5.1 - t * 1.1)); };
+    const a = Math.max(A, v.wx - .02), b = Math.min(B, v.wx + 1.02);
+    for (const [lw, col] of [[2.6, 'rgba(255,170,190,.10)'], [1.1, 'rgba(255,200,170,.28)'], [.28, 'rgba(255,240,220,.95)']]) {
+      g.strokeStyle = col; g.lineWidth = v.u * lw; g.lineCap = 'round'; g.beginPath();
+      for (let i = 0; i <= 48; i++) { const x = a + (b - a) * i / 48; g.lineTo(v.x(x), v.y(fy(x))); }
+      g.stroke();
+    }
+    for (let i = 0; i < 26; i++) {                         // hạt sao lấp lánh dọc sợi tơ
+      const x = A + (B - A) * ((h(i, 21) + t * .012) % 1);
+      if (v.sees(x, 0)) spark(v.x(x), v.y(fy(x)), v.u * (.5 + h(i, 22) * .9), .35 + .45 * Math.sin(t * (1.5 + h(i, 23) * 3) + i));
+    }
+    let glow = 0;
+    for (let k = k0 - 5; k <= k0; k++) {
+      const p = (t - k * P) / T, toRight = ((k % 2) + 2) % 2 === 0;
+      const end = toRight ? B : A, mine = Math.abs(end - nameX(v)) < .01;
+      if (p >= 1) {                                         // tới nơi: vỡ thành vòng sáng, tên bừng lên
+        const d = (p - 1) * T;
+        if (mine) glow = Math.max(glow, Math.exp(-d * 2.2));
+        if (d < 1.1 && v.sees(end)) {
+          g.strokeStyle = `rgba(255,205,190,${(1 - d / 1.1) * .7})`; g.lineWidth = v.u * .4;
+          g.beginPath(); g.arc(v.x(end), v.y(fy(end)), v.u * (2 + d * 16), 0, TAU); g.stroke();
+          for (let j = 0; j < 8; j++) { const an = j * TAU / 8 + k; heart(v.x(end) + Math.cos(an) * v.u * d * 14, v.y(fy(end)) + Math.sin(an) * v.u * d * 14 - v.u * d * d * 5, v.u * 1.1, 1 - d / 1.1, '#ffc2cc'); }
+        }
+        continue;
+      }
+      const e = ease(clamp(p)), x = toRight ? A + (B - A) * e : B - (B - A) * e;
+      if (!v.sees(x)) continue;
+      const X = v.x(x), Y = v.y(fy(x)) - v.u * 1.2;
+      glowDot(X, Y, v.u * 5, toRight ? 'rgba(255,190,200,.55)' : 'rgba(255,225,170,.55)');
+      heart(X, Y, v.u * (2 + .25 * Math.sin(t * 6 + k)), 1, toRight ? '#ffb3c1' : '#ffe0a3');
+    }
+    for (const x of [A, B]) if (v.sees(x)) glowDot(v.x(x), v.y(.72), v.u * 2.4, 'rgba(255,235,210,.9)');
+    name(v, glow, .4);
+  }
+
+  /* ---------- Cảnh 3. Đôi sao quấn quýt bay qua lại giữa hai màn, kéo theo bụi sao ---------- */
+  function pair(v, t) {
+    const om = .21, pos = (tt, j) => [
+      WD / 2 + (WD / 2 - .2) * Math.sin(om * tt) + .09 * Math.cos(tt * 1.9 + j * Math.PI),
+      .46 + .24 * Math.sin(om * 2.6 * tt) + .07 * Math.sin(tt * 1.9 + j * Math.PI),
+    ];
+    for (let i = 0; i < 46; i++) {                          // đom đóm trôi lơ lửng
+      const x = (h(i, 31) * WD + t * (.01 + h(i, 32) * .03)) % WD, y = (h(i, 33) + .04 * Math.sin(t * (.3 + h(i, 34)) + i) + 1) % 1;
+      if (v.sees(x, 0)) glowDot(v.x(x), v.y(y), v.u * (1 + h(i, 35) * 1.6), 'rgba(255,224,150,.8)', clamp(.5 + .5 * Math.sin(t * (.6 + h(i, 36) * 1.4) + i * 2.1)));
+    }
+    let glow = 0;
+    for (let j = 0; j < 2; j++) {
+      const step = .055, q0 = Math.floor(t / step), col = j ? '#cfe0ff' : '#ffe3a8';
+      for (let s = 60; s >= 1; s--) {                       // vệt bụi sao: vị trí cũ của ngôi sao, rơi dần xuống
+        const n = q0 - s, age = t - n * step, f = age / (60 * step), [x, y] = pos(n * step, j);
+        const jx = x + (h(n, 41 + j) - .5) * .05 * f, jy = y + (h(n, 43 + j) - .5) * .07 * f + .1 * f * f;
+        if (v.sees(jx, 0)) spark(v.x(jx), v.y(jy), v.u * (.4 + h(n, 45 + j) * 1.3) * (1 - f * .5), (1 - f) * (.45 + .55 * Math.sin(age * 9 + n)), col);
+      }
+      const [x, y] = pos(t, j);
+      glow = Math.max(glow, Math.exp(-(((x - nameX(v)) / .32) ** 2 + ((y - .42) / .3) ** 2)));
+      if (!v.sees(x, .2)) continue;
+      glowDot(v.x(x), v.y(y), v.u * 9, j ? 'rgba(170,195,255,.6)' : 'rgba(255,220,150,.6)');
+      g.save(); g.translate(v.x(x), v.y(y)); g.rotate(t * .8 + j); spark(0, 0, v.u * (3.4 + .5 * Math.sin(t * 5 + j)), 1, '#fff'); g.restore();
+    }
+    name(v, glow);
+  }
+
+  /* ---------- Cảnh 4. Vầng sáng lan từ giữa sân khấu (chỗ cô dâu chú rể đứng) ra hai màn ---------- */
+  function rings(v, t) {
+    const B = 1.5, k0 = Math.floor(t / B), cx = v.x(WD / 2), cy = v.y(.9);
+    const dName = Math.hypot((WD / 2 - nameX(v)) * v.pw, (.9 - .42) * v.ph);
+    let glow = 0;
+    for (let k = k0 - 8; k <= k0; k++) {
+      const age = t - k * B, r = age * .4 * v.pw, a = clamp(1 - age / 10) * .55;
+      glow = Math.max(glow, Math.exp(-(((r - dName) / (.1 * v.pw)) ** 2)) * a * 1.8);
+      if (r > Math.hypot(v.pw * (WD / 2 + .1), v.ph) || a <= 0) continue;
+      g.strokeStyle = `rgba(255,226,170,${a})`; g.lineWidth = v.u * (.35 + (k % 3 === 0 ? .5 : 0));
+      g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.stroke();
+      g.strokeStyle = `rgba(255,226,170,${a * .22})`; g.lineWidth = v.u * 3;
+      g.beginPath(); g.arc(cx, cy, r, 0, TAU); g.stroke();
+    }
+    for (let i = 0; i < 70; i++) {                          // bụi vàng bay lên
+      const x = h(i, 51) * WD + .03 * Math.sin(t * .5 + i), y = 1.1 - ((h(i, 52) + t * (.02 + h(i, 53) * .04)) % 1.2);
+      if (v.sees(x, 0)) spark(v.x(x), v.y(y), v.u * (.4 + h(i, 54)), clamp(y * 1.4) * (.3 + .5 * Math.sin(t * (1 + h(i, 55) * 3) + i)), '#ffe3a8');
+    }
+    name(v, clamp(glow));
+  }
+
+  /* ---------- Cảnh 5. Ảnh cưới hiện ở một màn rồi bay qua sân khấu, đáp xuống màn kia ---------- */
+  const skip = new Set(window.SKIP || []);
+  const PH = (window.PHOTOS || []).filter(p => !skip.has(p.f));
+  const STEP = [37, 41, 43, 47].find(s => PH.length % s) || 1, imgs = new Map();
+  const photo = k => PH[((k * STEP) % PH.length + PH.length) % PH.length];
+  function img(p) {
+    let i = imgs.get(p.f);
+    if (!i) { i = new Image(); i.decoding = 'async'; i.src = `../slide-anh/photos/s/${encodeURIComponent(p.f)}`; imgs.set(p.f, i); if (imgs.size > 40) imgs.delete(imgs.keys().next().value); }
+    return i;
+  }
+  function fly(v, t) {
+    name(v, 0, v.tall ? .9 : .84, v.tall ? .5 : .4);
+    if (!PH.length) return;
+    const P = 5, A1 = .9, A2 = 2.4, A3 = 4.6, k0 = Math.floor(t / P), spots = v.tall ? [.17, .41, .65] : [.2, .5, .8];
+    img(photo(k0 + 1)); img(photo(k0 + 2));
+    const size = v.tall ? Math.min(v.ph * .2, v.pw * .56) : Math.min(v.ph * .46, v.pw * .26);
+    for (let k = k0 - 7; k <= k0; k++) {
+      const p = photo(k), dt = t - k * P, src = ((k % 2) + 2) % 2, base = s => s ? 1 + G : 0, m = ((Math.floor(k / 2) % 3) + 3) % 3;
+      const sx = base(src) + .5, sy = v.tall ? .41 : .4;
+      const lx = base(1 - src) + (v.tall ? .5 + (h(k, 61) - .5) * .25 : spots[m]), ly = v.tall ? spots[m] : .38 + (h(k, 61) - .5) * .1;
+      const lr = (h(k, 62) - .5) * .4, gone = 6 * P + A3 - dt;
+      let x = sx, y = sy, s = 1.25, r = (h(k, 63) - .5) * .08, a = 1;
+      if (dt < A1) { const e = ease(dt / A1); s = 1.25 * (.7 + .3 * e); a = e; y = sy + (1 - e) * .08; }
+      else if (dt < A2) y = sy + .012 * Math.sin((dt - A1) * 2);
+      else if (dt < A3) { const e = ease((dt - A2) / (A3 - A2)); x = sx + (lx - sx) * e; y = sy + (ly - sy) * e - .2 * Math.sin(Math.PI * e); s = 1.25 - .25 * e; r += (lr - r) * e + Math.sin(Math.PI * e) * .5 * (src ? -1 : 1); }
+      else { x = lx; y = ly; s = 1; r = lr; a = clamp(gone); if (gone <= 0) continue; }
+      if (!v.sees(x, .6)) continue;
+      const w = size * s * Math.sqrt(p.a), hh = size * s / Math.sqrt(p.a), pad = size * s * .04, im = img(p);
+      g.save(); g.translate(v.x(x), v.y(y)); g.rotate(r); g.globalAlpha = a;
+      g.shadowColor = 'rgba(160,180,255,.45)'; g.shadowBlur = size * .12;
+      g.fillStyle = '#f7f2e8'; g.fillRect(-w / 2 - pad, -hh / 2 - pad, w + pad * 2, hh + pad * 4.2);
+      g.shadowBlur = 0;
+      if (im.complete && im.naturalWidth) g.drawImage(im, -w / 2, -hh / 2, w, hh);
+      else { g.fillStyle = p.c || '#333'; g.fillRect(-w / 2, -hh / 2, w, hh); }
+      g.restore();
+      if (dt > A2 && dt < A3) for (let j = 1; j < 14; j++) {  // vệt sao theo tấm ảnh đang bay
+        const e = ease(clamp((dt - j * .07 - A2) / (A3 - A2))), jx = sx + (lx - sx) * e, jy = sy + (ly - sy) * e - .2 * Math.sin(Math.PI * e) + (h(k * 32 + j, 64) - .5) * .12;
+        if (v.sees(jx, 0)) spark(v.x(jx), v.y(jy), v.u * (.8 + h(k * 32 + j, 65)), (1 - j / 14) * .8, '#ffe3a8');
+      }
+    }
+  }
+
+  const DRAW = [comets, thread, pair, rings, fly];
+
+  /* ---------- Vòng vẽ ---------- */
+  function frame() {
+    requestAnimationFrame(frame);
+    const t = (Date.now() + st.off) / 1000;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
+    const auto = !(st.canh >= 1 && st.canh <= DRAW.length), tm = t % TURN;
+    const idx = auto ? Math.floor(t / TURN) % DRAW.length : st.canh - 1, fade = auto ? clamp(Math.min(tm, TURN - tm) / 1.6) : 1;
+    for (const v of vps) {
+      g.save(); g.beginPath(); g.rect(v.px, v.py, v.pw, v.ph); g.clip();
+      sky(v, t);
+      DRAW[idx](v, t);
+      if (fade < 1) { g.globalAlpha = 1 - fade; g.fillStyle = '#000'; g.fillRect(v.px, v.py, v.pw, v.ph); sky(v, t); g.globalAlpha = 1; }
+      if (test) {                                           // vạch thử: chạy đều qua cả bầu trời, 4 giây một vòng
+        const x = ((t % 4) / 4) * WD;
+        if (v.sees(x, 0)) { g.fillStyle = '#fff'; g.fillRect(v.x(x) - v.u * .4, v.py, v.u * .8, v.ph); }
+        g.fillStyle = '#f0dcae'; g.font = `600 ${v.u * 12}px system-ui`; g.textAlign = 'center'; g.textBaseline = 'top';
+        g.fillText(String(Math.floor(t) % 60).padStart(2, '0'), v.px + v.pw / 2, v.py + v.u * 3);
+      }
+      g.restore();
+    }
+    if (MAN === 'xem' || !MAN) {                            // xem thử: vẽ khung hai màn và sân khấu ở giữa
+      const [a, b] = vps;
+      g.strokeStyle = 'rgba(255,255,255,.28)'; g.lineWidth = 1;
+      for (const v of vps) g.strokeRect(v.px + .5, v.py + .5, v.pw - 1, v.ph - 1);
+      g.fillStyle = 'rgba(255,255,255,.05)'; g.fillRect(a.px + a.pw, a.py + a.ph * .78, b.px - a.px - a.pw, a.ph * .22);
+      g.fillStyle = 'rgba(255,255,255,.4)'; g.font = `${Math.max(12, a.u * 5)}px system-ui`; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillText('Sân khấu', (a.px + a.pw + b.px) / 2, a.py + a.ph * .89);
+      g.textBaseline = 'bottom'; g.fillText(`${SCENES[idx]}${auto ? ' (tự đổi)' : ''}`, W / 2, a.py - a.u * 4);
+    }
+  }
+
+  /* ---------- Bảng điều khiển ---------- */
+  const $ = s => document.querySelector(s);
+  function sync() {
+    for (const a of document.querySelectorAll('#roles a')) {
+      const u = new URLSearchParams(location.search); u.set('man', a.dataset.man);
+      a.href = '?' + u; a.setAttribute('aria-pressed', a.dataset.man === MAN);
+    }
+    for (const b of document.querySelectorAll('#scenes button')) b.setAttribute('aria-pressed', +b.dataset.canh === (st.canh >= 1 && st.canh <= DRAW.length ? st.canh : 0));
+    $('#hoOut').textContent = st.ho.toFixed(2).replace('.', ',') + ' ×';
+    $('#offOut').textContent = (st.off > 0 ? '+' : '') + (st.off / 1000).toFixed(2).replace('.', ',') + ' s';
+    $('#testBtn').setAttribute('aria-pressed', test);
+  }
+  const setScene = n => { st.canh = n; save(); sync(); };
+  const nudge = ms => { st.off += ms; save(); sync(); };
+  const fullscreen = () => document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(() => {});
+  ['Tự đổi', ...SCENES].forEach((n, i) => {
+    const b = document.createElement('button'); b.dataset.canh = i; b.textContent = i ? `${i}. ${n}` : n;
+    b.onclick = () => setScene(i); $('#scenes').appendChild(b);
+  });
+  for (const b of document.querySelectorAll('[data-ho]')) b.onclick = () => { st.ho = clamp(st.ho + +b.dataset.ho, 0, 8); save(); layout(); sync(); };
+  for (const b of document.querySelectorAll('[data-off]')) b.onclick = () => nudge(+b.dataset.off);
+  $('#testBtn').onclick = () => { test = !test; sync(); };
+  $('#fsBtn').onclick = () => { document.body.classList.remove('open'); fullscreen(); };
+  $('#closeBtn').onclick = () => document.body.classList.remove('open');
+  $('#panel').addEventListener('pointerdown', e => { if (e.target.id === 'panel') document.body.classList.remove('open'); });
+  cv.addEventListener('dblclick', fullscreen);
+  cv.addEventListener('click', () => { if (matchMedia('(pointer: coarse)').matches) document.body.classList.add('open'); });
+  addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    const k = e.key.toLowerCase();
+    if (k === 'f') fullscreen();
+    else if (k === 'h') document.body.classList.toggle('open');
+    else if (k === 'escape') document.body.classList.remove('open');
+    else if (k === 't') { test = !test; sync(); }
+    else if (k === '[') nudge(-50);
+    else if (k === ']') nudge(50);
+    else if (/^[0-5]$/.test(k)) setScene(+k);
+  });
+  // Cửa sổ khác trên cùng máy đổi cảnh hay chỉnh giờ: đổi theo
+  addEventListener('storage', e => { if (e.key === KEY) { read(); layout(); sync(); } });
+  addEventListener('resize', layout);
+  let idle;
+  const wake = () => { document.body.classList.remove('idle'); clearTimeout(idle); idle = setTimeout(() => document.body.classList.add('idle'), 3000); };
+  addEventListener('pointermove', wake); wake();
+  let lock;
+  const awake = async () => { try { if (!lock || lock.released) lock = await navigator.wakeLock?.request('screen'); } catch (e) {} };
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) awake(); });
+  addEventListener('pointerdown', awake, { once: true }); awake();
+
+  layout(); sync();
+  if (!MAN) document.body.classList.add('open');           // chưa chọn màn: mở bảng để chọn
+  Promise.all([document.fonts.load('40px "Pinyon Script"', N1 + N2), document.fonts.load('500 20px "Cormorant Garamond"', TITLE)])
+    .catch(() => {}).then(() => requestAnimationFrame(frame));
+})();
+</script>
+<script src="../offline.js"></script>
+</body>
+</html>
