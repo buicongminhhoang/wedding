@@ -23,6 +23,9 @@ window.SL = (() => {
   if (!(cfg.ratio in RATIOS)) cfg.ratio = 'auto';
   if (!Array.isArray(cfg.off)) cfg.off = [];
   if (!Array.isArray(cfg.skip)) cfg.skip = [];
+  // Ảnh mặc định không chiếu (skip.js). Danh sách mặc định đổi thì bỏ lựa chọn cũ đã lưu trên máy này.
+  const SKIP0 = Array.isArray(window.SKIP) ? window.SKIP : [];
+  if (cfg.skipV !== JSON.stringify(SKIP0)) { cfg.skip = [...SKIP0]; cfg.skipV = JSON.stringify(SKIP0); }
   if (cfg.mode !== 'one') cfg.mode = 'auto';
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(cfg)); } catch (e) {} };
 
@@ -343,6 +346,28 @@ window.SL = (() => {
       });
     }
   }
+  /** Ghi lựa chọn ảnh hiện tại thành skip.js (web tĩnh không tự ghi được: người dùng lưu đè file trong thư mục slide-anh). */
+  async function saveSkip() {
+    const have = new Set(photos.map(p => p.f));
+    const list = cfg.skip.filter(f => have.has(f));
+    const text = '/* Ảnh mặc định KHÔNG chiếu. Tạo bằng nút "Lưu làm mặc định" trong thẻ Ảnh, hoặc sửa tay (tên file trong photos/s). */\n'
+      + 'window.SKIP = ' + JSON.stringify(list, null, 1) + ';\n';
+    const done = () => {
+      SKIP0.splice(0, SKIP0.length, ...list); cfg.skipV = JSON.stringify(SKIP0); save();
+      toast(`Đã ghi ${list.length} ảnh mặc định không chiếu. File skip.js phải nằm trong thư mục slide-anh.`, 6000);
+    };
+    if (window.showSaveFilePicker) {
+      try {
+        const h = await showSaveFilePicker({ suggestedName: 'skip.js', types: [{ description: 'skip.js', accept: { 'text/javascript': ['.js'] } }] });
+        const w = await h.createWritable(); await w.write(text); await w.close();
+        return done();
+      } catch (e) { if (e.name === 'AbortError') return; }
+    }
+    const a = el('a', '', document.body);
+    a.href = URL.createObjectURL(new Blob([text], { type: 'text/javascript' })); a.download = 'skip.js';
+    a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    done();
+  }
   function openBoard(tab) {
     if (tab === 'photos') buildThumbs();
     for (const b of $$('#tabs button')) b.setAttribute('aria-selected', b.dataset.tab === tab);
@@ -398,6 +423,8 @@ window.SL = (() => {
       else if (a === 'fs') { closeBoard(); fullscreen(); }
       else if (a === 'pall') { cfg.skip = []; dirty = true; save(); syncPanel(); }
       else if (a === 'pnone') { cfg.skip = photos.map(p => p.f); dirty = true; save(); syncPanel(); }
+      else if (a === 'pdef') { cfg.skip = [...SKIP0]; dirty = true; save(); syncPanel(); }
+      else if (a === 'psave') saveSkip();
       else if (a === 'reset') {
         for (const k of ['ratio', 'n1', 'n2', 'date', 'sig', 'grain']) cfg[k] = DEFAULTS[k];
         save(); applyLook(); syncPanel(); restart();

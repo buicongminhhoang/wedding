@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="robots" content="noindex, nofollow">
 <title>Minh Hoàng &amp; Kim Ngân · Màn hình lễ cưới</title>
 <link rel="stylesheet" href="sao-roi/fonts/fonts.css">
@@ -61,6 +64,23 @@
   }
   .ratios a:hover, .ratios a:focus-visible { border-color: var(--gold); color: var(--gold); outline: none; }
 
+  .offline { display: grid; gap: 12px; font-family: system-ui, "Segoe UI", sans-serif; padding: clamp(16px, 2.2vw, 24px);
+    border-radius: 20px; background: rgba(18, 20, 30, .82); border: 1px solid rgba(255, 255, 255, .13); }
+  .offline h2 { font: 600 clamp(22px, 2.6vw, 28px)/1.2 "Cormorant Garamond", serif; }
+  .offline .lead, .off-foot { font-size: 14.5px; line-height: 1.6; color: var(--soft); }
+  .off-foot { font-size: 13px; }
+  .off-row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: 12px 14px; border-radius: 12px;
+    background: rgba(255, 255, 255, .04); border: 1px solid rgba(255, 255, 255, .08); }
+  .off-txt { flex: 1 1 260px; display: grid; gap: 6px; font-size: 14.5px; color: var(--soft); }
+  .off-txt b { color: var(--ink); font-size: 16px; }
+  .off-txt .ok { color: #9be3a8; } .off-txt .bad { color: #ffb4a8; }
+  .off-bar { height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .1); overflow: hidden; }
+  .off-bar i { display: block; height: 100%; width: 0; background: var(--gold); transition: width .3s; }
+  .offline button { font: inherit; cursor: pointer; border-radius: 10px; }
+  .off-go { padding: 12px 18px; font-weight: 600; background: var(--gold); color: #17130a; border: 0; min-height: 44px; }
+  .off-go:disabled { opacity: .5; cursor: default; }
+  .off-wipe { justify-self: start; padding: 8px 12px; font-size: 13px; color: var(--soft); background: none; border: 1px solid rgba(255, 255, 255, .18); }
+
   footer { text-align: center; font: 13px/1.7 system-ui, "Segoe UI", sans-serif; color: #7e84a3; }
   kbd { padding: 1px 7px; border-radius: 5px; background: rgba(255, 255, 255, .12); font: inherit; color: var(--ink); }
   @media (max-width: 640px) {
@@ -117,6 +137,8 @@
   <footer>
     Sau khi mở: <kbd>F</kbd> toàn màn hình · <kbd>H</kbd> cài đặt. Màn 3×2 m dùng tỉ lệ 3:2, màn 2×3 m dùng 2:3.
   </footer>
+
+  <section class="offline" id="offline"></section>
 
   <section class="music" id="music"></section>
 
@@ -179,5 +201,6 @@
 })();
 </script>
 <script src="nhac-le/board.js"></script>
+<script src="offline.js"></script>
 </body>
 </html>

@@ -136,6 +136,21 @@ for f in sorted(ls(DL) & ls(DS), key=lambda n: (natural(group_of(n)), natural(n)
 with open(os.path.join(HERE, "photos.js"), "w", encoding="utf-8") as fp:
     fp.write("window.PHOTOS = " + json.dumps(items, ensure_ascii=False, separators=(",", ":")) + ";" + chr(10))
 
+# 4b. Ảnh mặc định không chiếu (skip.js): đổi theo tên mới, bỏ tên không còn ảnh
+SKIP = os.path.join(HERE, "skip.js")
+try:
+    txt = open(SKIP, encoding="utf-8").read()
+    head, body = txt[:txt.index("window.SKIP")], txt[txt.index("window.SKIP"):]
+    skip0 = json.loads(body[body.index("["):body.rindex("]") + 1])
+    have = {p["f"] for p in items}
+    skip = [f for f in (renamed.get(f, f) for f in skip0) if f in have]
+    if skip != skip0:
+        with open(SKIP, "w", encoding="utf-8") as fp:
+            fp.write(head + "window.SKIP = " + json.dumps(skip, ensure_ascii=False, indent=1) + ";" + chr(10))
+        say(f"skip.js: còn {len(skip)} ảnh mặc định không chiếu (trước {len(skip0)})")
+except (OSError, ValueError):
+    pass
+
 # 5. Danh sách nhạc
 os.makedirs(os.path.join(HERE, "music"), exist_ok=True)
 songs = sorted((f for f in os.listdir(os.path.join(HERE, "music")) if f.lower().endswith(AUDIO)), key=natural)

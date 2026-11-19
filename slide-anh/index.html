@@ -73,6 +73,8 @@
           <div class="row">
             <button data-act="pall">Chọn tất cả</button>
             <button data-act="pnone">Bỏ chọn tất cả</button>
+            <button data-act="pdef" title="Quay về bộ ảnh mặc định (theo skip.js)">Về mặc định</button>
+            <button data-act="psave" title="Ghi lựa chọn hiện tại vào skip.js: lưu đè file skip.js trong thư mục slide-anh">Lưu làm mặc định</button>
             <span id="photoGroups" class="row"></span>
           </div>
         </div>
@@ -137,6 +139,7 @@
 </div>
 
 <script src="photos.js"></script>
+<script src="skip.js"></script>
 <script src="music.js"></script>
 <script src="js/core.js"></script>
 <script src="js/music.js"></script>
@@ -149,5 +152,6 @@
 <script src="js/s-galaxy.js"></script>
 <script src="js/s-split.js"></script>
 <script>SL.start();</script>
+<script src="../offline.js"></script>
 </body>
 </html>

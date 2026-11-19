@@ -33,6 +33,13 @@ Trong Cloudflare, vào `hoangbcm.com` → **DNS → Records → Add record**:
 Để **DNS only** cho tới khi GitHub cấp xong chứng chỉ, sau đó tick **Enforce HTTPS** trong Settings → Pages.
 Nếu muốn bật proxy (mây cam) về sau, đặt SSL/TLS của Cloudflare ở chế độ **Full**, không dùng Flexible.
 
+## Dùng khi không có mạng
+
+Trên trang chọn có mục **Dùng khi không có mạng**: bấm "Tải về máy này" cho từng gói (slide ảnh, nhạc buổi lễ) khi còn mạng.
+File được lưu trong trình duyệt của đúng máy đó và không tự hết hạn. Mỗi máy, mỗi trình duyệt tải riêng; không dùng tab ẩn danh.
+iPhone, iPad: "Thêm vào Màn hình chính" trước, mở từ biểu tượng đó rồi mới tải.
+Nếu thay ảnh hoặc nhạc mà giữ nguyên tên file, bấm "Xoá bản đã lưu" rồi tải lại.
+
 ## Cập nhật nội dung
 
 - Ảnh: đổi tên hoặc thêm file trong `slide-anh/photos`, chạy `python slide-anh/prep.py`.
